@@ -22,7 +22,7 @@ public class SecurityConfig {
                 );
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/").permitAll() // 일단 개발을 위해서 모든 접근 허용. 필요 시 수정
+                        .requestMatchers("/", "/h2-console/**").permitAll() // 일단 개발을 위해서 모든 접근 허용. 필요 시 수정
                         .anyRequest().authenticated()
                 );
 
@@ -31,6 +31,9 @@ public class SecurityConfig {
                         .loginPage("/login") // 로그인 성공 시 redirect url 추후 작성
                         .permitAll()
                 );
+
+        http
+                .headers((headers) -> headers.frameOptions(frameOptions -> frameOptions.disable()));
 
         http
                 .logout((logout) -> logout
