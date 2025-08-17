@@ -1,5 +1,6 @@
 package com.practice.course_registration.entity;
 
+import com.practice.course_registration.Role;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -31,7 +32,8 @@ public class MemberEntity {
     @Column(nullable = false)
     private String password; // 로그인용 PW
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public MemberEntity(String memberName, String memberNumber, int grade, String memberId, String password) {
         this.memberName = memberName;
@@ -39,7 +41,7 @@ public class MemberEntity {
         this.grade = grade;
         this.memberId = memberId;
         this.password = password;
-        this.role = "ROLE_USER"; // 기본값
+        this.role = Role.STUDENT; // 기본값
     }
 
     public void changePassword(String password) {
@@ -52,5 +54,9 @@ public class MemberEntity {
 
     public void changeEmail(String memberEmail) {
         this.memberEmail = memberEmail;
+    }
+
+    public void changeRole(Role newRole) {
+        this.role = newRole;
     }
 }
