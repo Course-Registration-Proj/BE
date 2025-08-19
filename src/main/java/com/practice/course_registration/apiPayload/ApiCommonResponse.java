@@ -3,6 +3,7 @@ package com.practice.course_registration.apiPayload;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.practice.course_registration.apiPayload.code.status.SuccessStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -23,9 +24,9 @@ public class ApiCommonResponse<T> {
 
 
     // 성공시 응답
-//    public static <T> ApiCommonResponse<T> onSuccess(T result) {
-//        return new ApiCommonResponse<>(true, )
-//    }
+    public static <T> ApiCommonResponse<T> onSuccess(T result) {
+        return new ApiCommonResponse<>(true, SuccessStatus._OK.getCode() , SuccessStatus._OK.getMessage(), result);
+    }
 
     public static <T> ApiCommonResponse<T> onFailure(String code, String message, T data) {
         return new ApiCommonResponse<>(false, code, message, data);
