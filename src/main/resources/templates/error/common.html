@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+    <head><meta charset="UTF-8">
+        <title>Error</title>
+    </head>
+    <body>
+        <h1 th:text="${httpStatus}">500</h1>
+        <p>code: <span th:text="${code}">COMMON500</span></p>
+        <p>message: <span th:text="${message}">서버 에러, 관리자에게 문의 바랍니다.</span></p>
+        <p>isSuccess: <span th:text="${isSuccess}">false</span></p>
+        <p>path: <span th:text="${path}">/path</span></p>
+        <a href="/">홈으로</a>
+    </body>
+</html>
