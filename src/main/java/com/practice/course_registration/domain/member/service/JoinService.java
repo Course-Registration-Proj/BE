@@ -46,8 +46,8 @@ public class JoinService {
                 bCryptPasswordEncoder.encode(joinDTO.getPassword())
         );
 
-        if (joinDTO.getMemberEmail() != null)
-            member.changeEmail(joinDTO.getMemberEmail());
+    //        if (joinDTO.getMemberEmail() != null)
+    //            member.changeEmail(joinDTO.getMemberEmail());
 
         return member;
     }

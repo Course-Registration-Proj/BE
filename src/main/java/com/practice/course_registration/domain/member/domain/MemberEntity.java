@@ -23,8 +23,8 @@ public class MemberEntity {
 
     private int grade; // 학년
 
-    @Column(unique = true, nullable = true)
-    private String memberEmail; // 인증용 메일(추후 기능 추가)
+//    @Column(unique = true, nullable = true)
+//    private String memberEmail; // 인증용 메일(추후 기능 추가)
 
     @Column(unique = true, nullable = false)
     private String memberId; // 로그인용 ID
@@ -52,9 +52,9 @@ public class MemberEntity {
         this.grade = grade;
     }
 
-    public void changeEmail(String memberEmail) {
-        this.memberEmail = memberEmail;
-    }
+//    public void changeEmail(String memberEmail) {
+//        this.memberEmail = memberEmail;
+//    }
 
     public void changeRole(Role newRole) {
         this.role = newRole;
