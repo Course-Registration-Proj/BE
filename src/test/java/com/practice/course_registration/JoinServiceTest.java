@@ -1,9 +1,9 @@
 package com.practice.course_registration;
 
-import com.practice.course_registration.dto.JoinDTO;
-import com.practice.course_registration.entity.MemberEntity;
-import com.practice.course_registration.repository.MemberRepository;
-import com.practice.course_registration.service.JoinService;
+import com.practice.course_registration.domain.member.dto.JoinDTO;
+import com.practice.course_registration.domain.member.domain.MemberEntity;
+import com.practice.course_registration.domain.member.repository.MemberRepository;
+import com.practice.course_registration.domain.member.service.JoinService;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
