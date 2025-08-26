@@ -29,5 +29,4 @@ public class LikeSubject extends BaseEntity {
     @Column(nullable = false)
     private Boolean isRegistration;
 
-
 }
