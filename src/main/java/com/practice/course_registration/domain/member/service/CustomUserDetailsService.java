@@ -1,7 +1,7 @@
 package com.practice.course_registration.domain.member.service;
 
 import com.practice.course_registration.global.security.domain.CustomUserDetails;
-import com.practice.course_registration.domain.member.domain.MemberEntity;
+import com.practice.course_registration.domain.member.domain.Member;
 import com.practice.course_registration.domain.member.repository.MemberRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -18,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
-        MemberEntity member = memberRepository.findByMemberId(userId);
+        Member member = memberRepository.findByLoginId(userId);
 
         if (member == null)
             throw new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + userId);

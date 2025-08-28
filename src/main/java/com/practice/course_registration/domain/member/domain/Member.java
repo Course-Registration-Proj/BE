@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(name = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberEntity {
+public class Member {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -23,11 +23,11 @@ public class MemberEntity {
 
     private int grade; // 학년
 
-    @Column(unique = true, nullable = true)
-    private String memberEmail; // 인증용 메일(추후 기능 추가)
+//    @Column(unique = true, nullable = true)
+//    private String memberEmail; // 인증용 메일(추후 기능 추가)
 
     @Column(unique = true, nullable = false)
-    private String memberId; // 로그인용 ID
+    private String loginId; // 로그인용 ID
 
     @Column(nullable = false)
     private String password; // 로그인용 PW
@@ -35,11 +35,11 @@ public class MemberEntity {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    public MemberEntity(String memberName, String memberNumber, int grade, String memberId, String password) {
+    public Member(String memberName, String memberNumber, int grade, String loginId, String password) {
         this.memberName = memberName;
         this.memberNumber = memberNumber;
         this.grade = grade;
-        this.memberId = memberId;
+        this.loginId = loginId;
         this.password = password;
         this.role = Role.STUDENT; // 기본값
     }
@@ -52,9 +52,9 @@ public class MemberEntity {
         this.grade = grade;
     }
 
-    public void changeEmail(String memberEmail) {
-        this.memberEmail = memberEmail;
-    }
+//    public void changeEmail(String memberEmail) {
+//        this.memberEmail = memberEmail;
+//    }
 
     public void changeRole(Role newRole) {
         this.role = newRole;

@@ -1,6 +1,6 @@
 package com.practice.course_registration.global.security.domain;
 
-import com.practice.course_registration.domain.member.domain.MemberEntity;
+import com.practice.course_registration.domain.member.domain.Member;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,24 +11,24 @@ import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
 
-    private MemberEntity memberEntity;
-    public CustomUserDetails(MemberEntity memberEntity) {
-        this.memberEntity = memberEntity;
+    private Member member;
+    public CustomUserDetails(Member member) {
+        this.member = member;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + memberEntity.getRole().name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + member.getRole().name()));
     }
 
     @Override
     public String getPassword() {
-        return memberEntity.getPassword();
+        return member.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return memberEntity.getMemberId();
+        return member.getLoginId();
     }
 
     // 계정의 상태가 바뀔 일은 아직 없으니 모두 true 반환
@@ -63,6 +63,10 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public int hashCode() {
         return getUsername().hashCode();
+    }
+
+    public Long getID(){
+        return member.getId();
     }
 
 }
