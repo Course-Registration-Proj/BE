@@ -1,11 +1,9 @@
 package com.practice.course_registration.domain.subject.domain;
 
-import com.practice.course_registration.domain.member.domain.MemberEntity;
+import com.practice.course_registration.domain.member.domain.Member;
 import com.practice.course_registration.global.common.BaseEntity;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 
 @Entity
 @AllArgsConstructor
@@ -20,7 +18,7 @@ public class LikeSubject extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    private MemberEntity member;
+    private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")

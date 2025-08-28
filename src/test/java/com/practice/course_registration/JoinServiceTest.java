@@ -1,7 +1,7 @@
 package com.practice.course_registration;
 
 import com.practice.course_registration.domain.member.dto.JoinDTO;
-import com.practice.course_registration.domain.member.domain.MemberEntity;
+import com.practice.course_registration.domain.member.domain.Member;
 import com.practice.course_registration.domain.member.repository.MemberRepository;
 import com.practice.course_registration.domain.member.service.JoinService;
 import org.assertj.core.api.Assertions;
@@ -44,7 +44,7 @@ class JoinServiceTest {
     @DisplayName("회원 가입 성공")
     void joinProcess_Success() {
         //given
-        when(memberRepository.existsByMemberId(joinDTO.getMemberId())).thenReturn(false);
+        when(memberRepository.existsByLoginId(joinDTO.getMemberId())).thenReturn(false);
         when(memberRepository.existsByMemberNumber(joinDTO.getMemberNumber())).thenReturn(false);
         when(bCryptPasswordEncoder.encode(joinDTO.getPassword())).thenReturn("encodedPassword");
 
@@ -52,17 +52,17 @@ class JoinServiceTest {
         joinService.joinProcess(joinDTO);
 
         //then
-        verify(memberRepository, times(1)).existsByMemberId(joinDTO.getMemberId());
+        verify(memberRepository, times(1)).existsByLoginId(joinDTO.getMemberId());
         verify(memberRepository, times(1)).existsByMemberNumber(joinDTO.getMemberNumber());
         verify(bCryptPasswordEncoder, times(1)).encode(joinDTO.getPassword());
-        verify(memberRepository, times(1)).save(any(MemberEntity.class));
+        verify(memberRepository, times(1)).save(any(Member.class));
     }
 
     @Test
     @DisplayName("학번 중복으로 회원가입 실패")
     void joinProcess_DuplicateMemberNumber_Fail() {
         //given
-        when(memberRepository.existsByMemberId(joinDTO.getMemberId())).thenReturn(false);
+        when(memberRepository.existsByLoginId(joinDTO.getMemberId())).thenReturn(false);
         when(memberRepository.existsByMemberNumber(joinDTO.getMemberNumber())).thenReturn(true);
 
         // when & then
@@ -71,21 +71,21 @@ class JoinServiceTest {
                 .hasMessage("동일한 학번을 가진 회원이 존재합니다."); // 문자열로 비교하는 것을 나중에 에러 핸들링하면서 바꾸는 게 좋을듯
 
         // 학번 중복이므로 save 호출 X
-        verify(memberRepository, never()).save(any(MemberEntity.class));
+        verify(memberRepository, never()).save(any(Member.class));
     }
 
     @Test
     @DisplayName("ID 중복으로 회원가입 실패")
     void joinProcess_DuplicateMemberId_Fail() {
         // given
-        when(memberRepository.existsByMemberId(joinDTO.getMemberId())).thenReturn(true);
+        when(memberRepository.existsByLoginId(joinDTO.getMemberId())).thenReturn(true);
 
         // when & then
         Assertions.assertThatThrownBy(() -> joinService.joinProcess(joinDTO))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("동일한 로그인 ID를 가진 회원이 존재합니다.");
 
-        verify(memberRepository, never()).save(any(MemberEntity.class));
+        verify(memberRepository, never()).save(any(Member.class));
     }
 
     @Test
@@ -93,7 +93,7 @@ class JoinServiceTest {
     void joinProcess_WithoutEmail_Success(){
         //given
         joinDTO.setMemberEmail(null);
-        when(memberRepository.existsByMemberId(joinDTO.getMemberId())).thenReturn(false);
+        when(memberRepository.existsByLoginId(joinDTO.getMemberId())).thenReturn(false);
         when(memberRepository.existsByMemberNumber(joinDTO.getMemberNumber())).thenReturn(false);
         when(bCryptPasswordEncoder.encode(joinDTO.getPassword())).thenReturn("encodedPassword");
 
@@ -102,11 +102,9 @@ class JoinServiceTest {
         joinService.joinProcess(joinDTO);
 
         //then
-        verify(memberRepository, times(1)).existsByMemberId(joinDTO.getMemberId());
+        verify(memberRepository, times(1)).existsByLoginId(joinDTO.getMemberId());
         verify(memberRepository, times(1)).existsByMemberNumber(joinDTO.getMemberNumber());
         verify(bCryptPasswordEncoder, times(1)).encode(joinDTO.getPassword());
-        verify(memberRepository, times(1)).save(any(MemberEntity.class));
+        verify(memberRepository, times(1)).save(any(Member.class));
     }
-
-
 }

@@ -12,6 +12,6 @@ import java.util.List;
 public interface LikeSubjectRepository extends JpaRepository<LikeSubject, Long> {
     List<LikeSubject> findByMemberId(Long memberId);
 
-    @Query("SELECT l FROM LikeSubject l where l.member.id = :memberId and l.isRegistration = true order by l.subject.id ASC")
+    @Query("SELECT ls FROM LikeSubject ls JOIN FETCH ls.subject s WHERE ls.member.id = :memberId AND ls.isRegistration = true ORDER BY s.subjectName")
     Page<LikeSubject> findByMemberIdOrderBySubjectAsc(@Param("memberId") Long memberId, Pageable pageable);
 }
