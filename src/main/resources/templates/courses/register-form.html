@@ -33,10 +33,10 @@
         <input type="text" name="code" th:value="${filters.code}" placeholder="예: AIX0002">
     </label>
     <label>교과명
-        <input type="text" name="name" th:value="${filters.subjectName}" placeholder="예: 자료구조">
+        <input type="text" name="subjectName" th:value="${filters.subjectName}" placeholder="예: 자료구조">
     </label>
     <label>교수명
-        <input type="text" name="professor" th:value="${filters.professorName}" placeholder="예: 홍길동">
+        <input type="text" name="professorName" th:value="${filters.professorName}" placeholder="예: 홍길동">
     </label>
     <button type="submit">조회</button>
 </form>
@@ -121,20 +121,20 @@
 <div class="pagination" th:if="${hasSearched and page.totalPages > 1}">
     <a th:if="${page.hasPrevious()}"
        th:href="@{/courses/search(page=${page.number-1}, size=${page.size},
-                                code=${filters.code}, name=${filters.subjectName}, professor=${filters.professorName})}">
+                                code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}">
         이전
     </a>
 
     <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
           th:classappend="${i == page.number} ? 'active'">
     <a th:href="@{/courses/search(page=${i}, size=${page.size},
-                                  code=${filters.code}, name=${filters.subjectName}, professor=${filters.professorName})}"
+                                  code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}"
        th:text="${i + 1}">1</a>
   </span>
 
     <a th:if="${page.hasNext()}"
        th:href="@{/courses/search(page=${page.number+1}, size=${page.size},
-                                code=${filters.code}, name=${filters.subjectName}, professor=${filters.professorName})}">
+                                code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}">
         다음
     </a>
 </div>

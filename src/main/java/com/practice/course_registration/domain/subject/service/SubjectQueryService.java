@@ -42,6 +42,8 @@ public class SubjectQueryService {
         String professorName = nullIfBlank(filters.getProfessorName());
         String subjectName = nullIfBlank(filters.getSubjectName());
 
+
+
         Page<Subject> subjects
                 = subjectRepository.findAllByCodeAndProfessorNameAndSubjectName(code, professorName, subjectName, pageable);
 
