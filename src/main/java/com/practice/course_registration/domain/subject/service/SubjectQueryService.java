@@ -36,6 +36,7 @@ public class SubjectQueryService {
 
     public Page<SubjectResponseDTO> searchAllSubject(Long memberId, CourseFilterRequestDTO filters, Pageable pageable) {
 
+        log.info("===========search 시작==============");
         MemberEntity member = findById(memberId);
 
         String code = nullIfBlank(filters.getCode());
@@ -43,9 +44,10 @@ public class SubjectQueryService {
         String subjectName = nullIfBlank(filters.getSubjectName());
 
 
-
+        log.info("===========code: " + code + " =======professorName : " + professorName + " ========subjectName" + subjectName + " \n");
         Page<Subject> subjects
                 = subjectRepository.findAllByCodeAndProfessorNameAndSubjectName(code, professorName, subjectName, pageable);
+
 
         if (subjects.isEmpty()) {
             return Page.empty(pageable);
@@ -55,6 +57,7 @@ public class SubjectQueryService {
         List<Long> subjectIds = subjects.getContent().stream()
                 .map(Subject::getId)
                 .toList();
+        log.info("===========페이지 크기 : " + subjectIds.size());
 
         Set<Long> registeredIds = memberSubjectRepository.findAllByMemberAndSubject(member, subjectIds);
         Set<Long> likedIds = likeSubjectRepository.findAllByMemberAndSubject(member, subjectIds);
