@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>희망 과목 목록</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .subject-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        .page-link {
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #007bff;
+        }
+        .page-link:hover { background-color: #e9ecef; }
+        .page-current {
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 4px;
+            border: 1px solid #007bff;
+        }
+        .page-info {
+            text-align: center;
+            color: #666;
+            margin: 10px 0;
+        }
+        .no-subjects {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            margin: 50px 0;
+        }
+        .subject-info {
+            margin: 8px 0;
+        }
+        .subject-code {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .capacity-info {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+<h1>희망 과목 목록</h1>
+
+<div class="page-info">
+    <span th:text="'전체 ' + ${likeSubjectPage.totalElements} + '개 과목'">전체 0개 과목</span>
+    <span th:text="'(' + (${likeSubjectPage.number} + 1) + '/' + ${likeSubjectPage.totalPages} + ' 페이지)'">
+            (1/1 페이지)
+        </span>
+</div>
+
+<div th:if="${!likeSubjectPage.empty}">
+    <div th:each="likeSubject : ${likeSubjectPage.content}" class="subject-card">
+        <h3 th:text="${likeSubject.subjectName}">과목명</h3>
+
+        <div class="subject-info">
+            <p><strong>교수:</strong> <span th:text="${likeSubject.professorName}">교수명</span></p>
+        </div>
+
+        <div class="subject-info" th:if="${likeSubject.code}">
+            <p><strong>과목코드:</strong> <span th:text="${likeSubject.code}" class="subject-code">과목코드</span></p>
+        </div>
+
+        <div class="subject-info" th:if="${likeSubject.subjectDay}">
+            <p><strong>요일:</strong> <span th:text="${likeSubject.subjectDay}">월요일</span></p>
+        </div>
+
+        <div class="subject-info" th:if="${likeSubject.limitedNum != null}">
+            <p class="capacity-info">
+                <strong>수강정원:</strong>
+                <span th:text="${likeSubject.limitedNum}">30</span>명
+                <span th:if="${likeSubject.registeredNum != null}">
+                    (현재 <span th:text="${likeSubject.registeredNum}">25</span>명 신청)
+                </span>
+            </p>
+        </div>
+
+        <div class="subject-info">
+            <p><strong>상태:</strong>
+                <span style="color: gray;">관심 과목</span>
+            </p>
+        </div>
+    </div>
+</div>
+<div th:if="${likeSubjectPage.empty}" class="no-subjects">
+    <p>좋아요한 과목이 없습니다.</p>
+</div>
+
+<div th:if="${likeSubjectPage.totalPages > 1}" class="pagination">
+    <a th:if="${!likeSubjectPage.first}"
+       th:href="@{/like(page=0, size=${likeSubjectPage.size})}"
+       class="page-link">첫 페이지</a>
+
+    <a th:if="${likeSubjectPage.hasPrevious()}"
+       th:href="@{/like(page=${likeSubjectPage.number - 1}, size=${likeSubjectPage.size})}"
+       class="page-link">이전</a>
+
+    <th:block th:with="
+            startPage=${T(java.lang.Math).max(0, likeSubjectPage.number - 2)},
+            endPage=${T(java.lang.Math).min(likeSubjectPage.totalPages - 1, likeSubjectPage.number + 2)}">
+
+            <span th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                <span th:if="${i == likeSubjectPage.number}" class="page-current" th:text="${i + 1}">1</span>
+                <a th:if="${i != likeSubjectPage.number}"
+                   th:href="@{/like(page=${i}, size=${likeSubjectPage.size})}"
+                   class="page-link"
+                   th:text="${i + 1}">1</a>
+            </span>
+    </th:block>
+
+    <a th:if="${likeSubjectPage.hasNext()}"
+       th:href="@{/like(page=${likeSubjectPage.number + 1}, size=${likeSubjectPage.size})}"
+       class="page-link">다음</a>
+
+    <a th:if="${!likeSubjectPage.last}"
+       th:href="@{/like(page=${likeSubjectPage.totalPages - 1}, size=${likeSubjectPage.size})}"
+       class="page-link">마지막 페이지</a>
+</div>
+
+<div style="text-align: center; margin-top: 20px;">
+    <form th:action="@{/like}" method="get" >
+        <label for="size">페이지당 항목 수:</label>
+        <select name="size" id="size" onchange="this.form.submit()">
+            <option value="3" th:selected="${likeSubjectPage.size == 3}">3개</option>
+            <option value="5" th:selected="${likeSubjectPage.size == 5}">5개</option>
+            <option value="10" th:selected="${likeSubjectPage.size == 10}">10개</option>
+            <option value="20" th:selected="${likeSubjectPage.size == 20}">20개</option>
+        </select>
+        <input type="hidden" name="page" value="0" />
+    </form>
+</div>
+</body>
+</html>

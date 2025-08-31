@@ -13,14 +13,17 @@ import java.util.Set;
 
 public interface LikeSubjectRepository extends JpaRepository<LikeSubject, Long> {
 
-
-
-
-
-    @Query("""
+  @Query("""
       SELECT ls.subject.id
       FROM LikeSubject ls
       WHERE ls.member = :member AND ls.subject.id IN :subjectIds
     """)
     Set<Long> findAllByMemberAndSubject(@Param("member") MemberEntity member, @Param("subjectIds") List<Long> subjectIds);
+
+         
+    List<LikeSubject> findByMemberId(Long memberId);
+
+    @Query("SELECT ls FROM LikeSubject ls JOIN FETCH ls.subject s WHERE ls.member.id = :memberId AND ls.isRegistration = true ORDER BY s.subjectName")
+    Page<LikeSubject> findByMemberIdOrderBySubjectAsc(@Param("memberId") Long memberId, Pageable pageable);
+    
 }
