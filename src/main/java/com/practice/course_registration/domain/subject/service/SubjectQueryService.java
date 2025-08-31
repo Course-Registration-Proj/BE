@@ -1,6 +1,6 @@
 package com.practice.course_registration.domain.subject.service;
 
-import com.practice.course_registration.domain.member.domain.MemberEntity;
+import com.practice.course_registration.domain.member.domain.Member;
 import com.practice.course_registration.domain.member.repository.MemberRepository;
 import com.practice.course_registration.domain.subject.domain.MemberSubject;
 import com.practice.course_registration.domain.subject.domain.Subject;
@@ -37,7 +37,7 @@ public class SubjectQueryService {
     public Page<SubjectResponseDTO> searchAllSubject(Long memberId, CourseFilterRequestDTO filters, Pageable pageable) {
 
         log.info("===========search 시작==============");
-        MemberEntity member = findById(memberId);
+        Member member = findById(memberId);
 
         String code = nullIfBlank(filters.getCode());
         String professorName = nullIfBlank(filters.getProfessorName());
@@ -76,7 +76,7 @@ public class SubjectQueryService {
         );
     }
 
-    private MemberEntity findById(Long memberId) {
+    private Member findById(Long memberId) {
         return memberRepository.findById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
     }
 
