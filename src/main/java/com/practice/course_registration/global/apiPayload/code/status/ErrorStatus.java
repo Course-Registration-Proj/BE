@@ -22,6 +22,8 @@ public enum ErrorStatus implements BaseErrorCode {
     // 500번대
     _INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
 
+    // member
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER4001", "해당 멤버를 찾을 수 없습니다."),
 
 
     ;

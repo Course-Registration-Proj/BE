@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>수강신청</title>
+    <style>
+        body{font-family:system-ui,Roboto,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;margin:20px;color:#1f2937}
+        h1{margin:0 0 16px;font-size:22px}
+        form.search{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+        label{display:flex;flex-direction:column;font-size:12px;color:#6b7280}
+        input[type="text"]{height:36px;border:1px solid #e5e7eb;border-radius:8px;padding:0 10px;min-width:180px}
+        button[type="submit"]{height:36px;border-radius:8px;border:1px solid #2563eb;background:#2563eb;color:#fff;padding:0 14px;cursor:pointer}
+        table{width:100%;border-collapse:collapse;margin-top:10px}
+        th,td{border:1px solid #e5e7eb;padding:10px;text-align:center;font-size:14px}
+        th{background:#f9fafb;color:#6b7280}
+        .btn{display:inline-block;height:30px;line-height:28px;padding:0 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
+        .btn-blue{border-color:#2563eb;background:#2563eb;color:#fff}
+        .btn-ghost{background:#fff}
+        .btn.disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
+        .pagination{margin-top:16px;text-align:center}
+        .pagination a,.pagination span{display:inline-block;margin:0 4px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#374151}
+        .pagination .active{background:#eef2ff;border-color:#c7d2fe;font-weight:700}
+        .muted{color:#6b7280;font-size:12px}
+    </style>
+</head>
+<body>
+
+<h1>수강신청</h1>
+
+<!-- 🔎 필터: 결과 엔드포인트로 GET -->
+<form class="search" th:action="@{/courses/search}" method="get">
+    <label>학수번호
+        <input type="text" name="code" th:value="${filters.code}" placeholder="예: AIX0002">
+    </label>
+    <label>교과명
+        <input type="text" name="subjectName" th:value="${filters.subjectName}" placeholder="예: 자료구조">
+    </label>
+    <label>교수명
+        <input type="text" name="professorName" th:value="${filters.professorName}" placeholder="예: 홍길동">
+    </label>
+    <button type="submit">조회</button>
+</form>
+
+<!-- 건수: 검색 후에만 노출 -->
+<div class="muted" th:if="${hasSearched}"
+     th:text="'총 ' + ${page.totalElements} + '건 / ' + '페이지 ' + (${page.number + 1}) + ' / ' + ${page.totalPages}">
+    총 0건
+</div>
+
+<!-- 📋 결과 테이블: 검색 후에만 -->
+<table aria-label="과목 목록" th:if="${hasSearched}">
+    <thead>
+    <tr>
+        <th style="width:110px">수강신청</th>
+        <th style="width:110px">희망신청</th>
+        <th>교과명</th>
+        <th style="width:140px">교수명</th>
+        <th style="width:120px">제한인원</th>
+        <th style="width:140px">학수번호</th>
+        <th style="width:260px">수업 요일·시간</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="s : ${subjects}">
+        <!-- 수강신청 버튼(활성/비활성 토글) -->
+        <td>
+            <form th:action="@{/courses/apply}" method="post" style="display:inline">
+                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+                <input type="hidden" name="code" th:value="${s.code}">
+                <button class="btn btn-blue" type="submit"
+                        th:disabled="${s.registered}" th:classappend="${s.registered} ? ' disabled'">
+                    신청
+                </button>
+            </form>
+            <form th:action="@{/courses/cancel}" method="post" style="display:inline;margin-left:6px">
+                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+                <input type="hidden" name="code" th:value="${s.code}">
+                <button class="btn" type="submit"
+                        th:disabled="${!s.registered}" th:classappend="${!s.registered} ? ' disabled'">
+                    신청취소
+                </button>
+            </form>
+        </td>
+
+        <!-- 희망 버튼(활성/비활성 토글) -->
+        <td>
+            <form th:action="@{/courses/wish}" method="post" style="display:inline">
+                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+                <input type="hidden" name="code" th:value="${s.code}">
+                <button class="btn btn-ghost" type="submit"
+                        th:disabled="${s.liked}" th:classappend="${s.liked} ? ' disabled'">
+                    희망추가
+                </button>
+            </form>
+            <form th:action="@{/courses/unwish}" method="post" style="display:inline;margin-left:6px">
+                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+                <input type="hidden" name="code" th:value="${s.code}">
+                <button class="btn btn-ghost" type="submit"
+                        th:disabled="${!s.liked}" th:classappend="${!s.liked} ? ' disabled'">
+                    희망해제
+                </button>
+            </form>
+        </td>
+
+        <!-- 과목 정보 -->
+        <td th:text="${s.subjectName}">교과명</td>
+        <td th:text="${s.professorName}">홍길동</td>
+        <td th:text="${s.limitedNum}">30</td>
+        <td th:text="${s.code}">CS101</td>
+        <td th:text="${s.subjectDay + ' ' + s.startTime + ' ~ ' + s.endTime}">화 13:00 ~ 14:30</td>
+    </tr>
+
+    <!-- 빈 상태: 검색 후인데 결과가 없을 때만 -->
+    <tr th:if="${hasSearched and #lists.isEmpty(subjects)}">
+        <td colspan="7">조건에 맞는 과목이 없습니다.</td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- 📑 페이징: 검색 후에만 -->
+<div class="pagination" th:if="${hasSearched and page.totalPages > 1}">
+    <a th:if="${page.hasPrevious()}"
+       th:href="@{/courses/search(page=${page.number-1}, size=${page.size},
+                                code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}">
+        이전
+    </a>
+
+    <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
+          th:classappend="${i == page.number} ? 'active'">
+    <a th:href="@{/courses/search(page=${i}, size=${page.size},
+                                  code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}"
+       th:text="${i + 1}">1</a>
+  </span>
+
+    <a th:if="${page.hasNext()}"
+       th:href="@{/courses/search(page=${page.number+1}, size=${page.size},
+                                code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}">
+        다음
+    </a>
+</div>
+
+</body>
+</html>

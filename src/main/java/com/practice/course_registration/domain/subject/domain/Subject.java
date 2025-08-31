@@ -28,6 +28,7 @@ public class Subject extends BaseEntity {
 
     private String code;
 
+    @Enumerated(EnumType.STRING)
     private SubjectDay subjectDay; // 수업 요일 (교양이라 하루만 한다는 전제)
 
     private LocalTime startTime;
