@@ -64,22 +64,15 @@
     <tr th:each="s : ${subjects}">
         <!-- 수강신청 버튼(활성/비활성 토글) -->
         <td>
-            <form th:action="@{/courses/apply}" method="post" style="display:inline">
+            <!-- 신청 안 한 과목이면 '수강신청' 버튼 -->
+            <form th:if="${!s.registered}" th:action="@{/courses/apply}" method="post" style="display:inline">
                 <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
                 <input type="hidden" name="code" th:value="${s.code}">
-                <button class="btn btn-blue" type="submit"
-                        th:disabled="${s.registered}" th:classappend="${s.registered} ? ' disabled'">
-                    신청
-                </button>
+                <button class="btn btn-blue" type="submit">수강신청</button>
             </form>
-            <form th:action="@{/courses/cancel}" method="post" style="display:inline;margin-left:6px">
-                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-                <input type="hidden" name="code" th:value="${s.code}">
-                <button class="btn" type="submit"
-                        th:disabled="${!s.registered}" th:classappend="${!s.registered} ? ' disabled'">
-                    신청취소
-                </button>
-            </form>
+
+            <!-- 이미 신청한 과목이면 버튼 없음 (또는 텍스트 표시) -->
+            <span th:if="${s.registered}" style="color:gray;">신청 완료</span>
         </td>
 
         <!-- 희망 버튼(활성/비활성 토글) -->
@@ -92,14 +85,7 @@
                     희망추가
                 </button>
             </form>
-            <form th:action="@{/courses/unwish}" method="post" style="display:inline;margin-left:6px">
-                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-                <input type="hidden" name="code" th:value="${s.code}">
-                <button class="btn btn-ghost" type="submit"
-                        th:disabled="${!s.liked}" th:classappend="${!s.liked} ? ' disabled'">
-                    희망해제
-                </button>
-            </form>
+            <span th:if="${s.liked}"></span>
         </td>
 
         <!-- 과목 정보 -->
@@ -138,6 +124,14 @@
         다음
     </a>
 </div>
+
+<script th:if="${message}" th:inline="javascript">
+    alert([[${message}]]);
+</script>
+
+<script th:if="${errorMessage}" th:inline="javascript">
+    alert([[${errorMessage}]]);
+</script>
 
 </body>
 </html>

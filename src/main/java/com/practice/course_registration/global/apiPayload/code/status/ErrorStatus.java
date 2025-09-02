@@ -26,6 +26,11 @@ public enum ErrorStatus implements BaseErrorCode {
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEMBER4001", "해당 멤버를 찾을 수 없습니다."),
 
 
+    // subject
+    SUBJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "SUBJECT4001", "해당 과목을 찾을 수 없습니다."),
+    ALREADY_APPLY_SUBJECT(HttpStatus.BAD_REQUEST, "SUBJECT4002", "이미 신청한 과목입니다."),
+    CONFLICT_COURSE_TIME(HttpStatus.BAD_REQUEST, "SUBJECT4003", "동일한 시간대에 신청한 과목이 있습니다."),
+
     ;
 
     private final HttpStatus httpStatus;

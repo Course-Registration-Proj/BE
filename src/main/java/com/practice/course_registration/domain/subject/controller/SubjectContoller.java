@@ -4,6 +4,7 @@ import com.practice.course_registration.domain.subject.dto.CourseFilterRequestDT
 import com.practice.course_registration.domain.subject.dto.SubjectResponseDTO;
 import com.practice.course_registration.domain.subject.service.SubjectQueryService;
 import com.practice.course_registration.domain.subject.service.SubjectService;
+import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -55,5 +59,20 @@ public class SubjectContoller {
         model.addAttribute("hasSearched", true);
 
         return "courses/register-form";
+    }
+
+    @PostMapping("/apply")
+    public String applyCourse(@RequestParam String code,
+                              RedirectAttributes redirectAttributes) { // 리다이렉트할 때 데이터 들고갈 수 있게 하는 용도
+
+        Long memberId = 1L;
+        try {
+            subjectService.applyCourse(memberId, code);
+            redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");
+        } catch (ErrorHandler e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/courses";
     }
 }
