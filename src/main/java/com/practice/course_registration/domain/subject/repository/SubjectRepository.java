@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
 
@@ -23,4 +25,6 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
                                                               @Param("professorName") String professorName,
                                                               @Param("subjectName") String subjectName,
                                                               Pageable pageable);
+
+    Optional<Subject> findByCode(String code);
 }
