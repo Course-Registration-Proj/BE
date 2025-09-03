@@ -40,4 +40,10 @@ public class Subject extends BaseEntity {
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
     private List<LikeSubject> likeSubjects = new ArrayList<>();
+
+
+    public boolean conflictCheck(Subject subject) {
+        return this.getStartTime().isBefore(subject.getEndTime())
+                && this.getEndTime().isAfter(subject.getStartTime());
+    }
 }
