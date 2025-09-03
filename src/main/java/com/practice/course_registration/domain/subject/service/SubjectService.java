@@ -48,12 +48,11 @@ public class SubjectService {
                 .filter(subj ->
                         subj.getSubjectDay() == subject.getSubjectDay()
                 )
-                .anyMatch(subj -> subj.getStartTime().isBefore(subject.getEndTime())
-                        && subj.getEndTime().isAfter(subject.getStartTime()))
-
+                .anyMatch(subj -> subj.conflictCheck(subject))
         ;
 
         if (conflict) {
+            log.error("시간 충돌");
             throw new ErrorHandler(ErrorStatus.CONFLICT_COURSE_TIME);
         }
 
