@@ -38,6 +38,7 @@ public class SubjectService {
         * 예외처리
         * - 이미 신청된 경우
         * - 신청한 과목과 같은 시간의 과목인 경우
+        * - 과목코드가 같은 경우
         * */
         if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
@@ -51,10 +52,25 @@ public class SubjectService {
                 .anyMatch(subj -> subj.conflictCheck(subject))
         ;
 
+        int isSameCode = member.getMemberSubjects().stream()
+                .map(MemberSubject::getSubject)
+                .filter(subj ->
+                        subj.getCode().equals(subject.getCode())
+                )
+                .toList()
+                .size()
+        ;
+
         if (conflict) {
             log.error("시간 충돌");
             throw new ErrorHandler(ErrorStatus.CONFLICT_COURSE_TIME);
         }
+
+        if (isSameCode != 0) {
+            log.error("이미 신청한 과목");
+            throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
+        }
+
 
         // 저장
         MemberSubject memberSubject = MemberSubject.builder()
