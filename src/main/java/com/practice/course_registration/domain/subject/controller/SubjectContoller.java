@@ -38,6 +38,7 @@ public class SubjectContoller {
         model.addAttribute("subjects", List.of());
         model.addAttribute("filters", new CourseFilterRequestDTO());
         model.addAttribute("hasSearched", false);
+        model.addAttribute("activeTab", "register");
         return "courses/register-form";
     }
 
@@ -57,6 +58,7 @@ public class SubjectContoller {
         model.addAttribute("filters", filters);
         model.addAttribute("page", subjects);
         model.addAttribute("hasSearched", true);
+        model.addAttribute("activeTab", "register");
 
         return "courses/register-form";
     }

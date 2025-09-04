@@ -27,6 +27,27 @@
 
 <h1>수강신청</h1>
 
+<!-- 탭 네비게이션 -->
+<nav class="tabs">
+    <a th:href="@{/courses}"
+       th:classappend="${activeTab}=='register' ? ' active'">수강신청</a>
+    <a th:href="@{/courses/applied}"
+       th:classappend="${activeTab}=='applied' ? ' active'">신청내역</a>
+    <a th:href="@{/courses/wishlist}"
+       th:classappend="${activeTab}=='wishlist' ? ' active'">희망수업</a>
+</nav>
+
+<style>
+    .tabs{display:flex;gap:10px;margin:14px 0;border-bottom:1px solid #e5e7eb}
+    .tabs a{padding:10px 14px;border:1px solid transparent;border-bottom:none;
+        border-top-left-radius:8px;border-top-right-radius:8px;
+        color:#374151;text-decoration:none}
+    .tabs a:hover{background:#f9fafb}
+    .tabs a.active{background:#fff;border-color:#e5e7eb;border-bottom:1px solid #fff;
+        font-weight:700}
+</style>
+
+
 <!-- 🔎 필터: 결과 엔드포인트로 GET -->
 <form class="search" th:action="@{/courses/search}" method="get">
     <label>학수번호
