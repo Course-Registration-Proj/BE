@@ -4,6 +4,7 @@ import com.practice.course_registration.domain.member.domain.Member;
 import com.practice.course_registration.domain.subject.domain.MemberSubject;
 import com.practice.course_registration.domain.subject.domain.Subject;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -23,4 +24,9 @@ public interface MemberSubjectRepository extends JpaRepository<MemberSubject, Lo
     Optional<MemberSubject> findByMemberAndSubject(Member member, Subject subject);
 
     List<MemberSubject> findAllByMember(Member member);
+
+    @Modifying
+    @Query("delete from MemberSubject ms where ms.member.id = :memberId and ms.subject.id = :subjectId")
+    void deleteByMemberIdAndSubjectId(@Param("memberId") Long memberId, @Param("subjectId") Long subjectId);
+
 }

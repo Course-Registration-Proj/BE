@@ -38,4 +38,13 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
         AND s.registeredNum < s.limitedNum
     """)
     int tryIncreaseRegistered(@Param("id") Long subjectId);
+
+    @Modifying
+    @Query("""
+        UPDATE Subject s
+        SET s.registeredNum = s.registeredNum - 1
+        WHERE s.id = :id
+        AND s.registeredNum < s.limitedNum
+    """)
+    int tryDecreaseRegistered(@Param("id") Long subjectId);
 }

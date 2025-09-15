@@ -87,6 +87,7 @@ public class SubjectQueryService {
         return memberSubjects.stream()
                 .map(MemberSubject::getSubject)
                 .map(subject -> MyRegisteredSubjectResponseDTO.builder()
+                        .id(subject.getId())
                         .subjectName(subject.getSubjectName())
                         .professorName(subject.getProfessorName())
                         .limitedNum(subject.getLimitedNum())

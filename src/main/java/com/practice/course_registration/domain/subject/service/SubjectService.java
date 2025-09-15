@@ -30,7 +30,7 @@ public class SubjectService {
     // 수강신청
     public void applyCourse(Long memberId, String code) {
         // 멤버 찾기
-        Member member = findById(memberId);
+        Member member = findMemberById(memberId);
 
         // 해당 과목 찾기
         Subject subject = findByCode(code);
@@ -76,9 +76,10 @@ public class SubjectService {
         int result = subjectRepository.tryIncreaseRegistered(subject.getId());
 
         if (result == 0) {
-            log.error("제한인원 초과");
+            log.error("제한인원 초과, 제한인원 : " + subject.getLimitedNum() + " , 신청인원 : " + subject.getRegisteredNum());
             throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
         }
+
 
         // 저장
         MemberSubject memberSubject = MemberSubject.builder()
@@ -92,7 +93,32 @@ public class SubjectService {
 
     }
 
-    private Member findById(Long memberId) {
+
+    // 수강취소
+    public void cancelCourse(Long memberId, Long subjectId) {
+
+        // 멤버 찾기
+        Member member = findMemberById(memberId);
+
+        // 해당 과목 찾기
+        Subject subject = findSubjectById(subjectId);
+
+        MemberSubject memberSubject = memberSubjectRepository.findByMemberAndSubject(member, subject)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.NOT_APPLY_SUBJECT));
+
+
+        memberSubjectRepository.deleteByMemberIdAndSubjectId(memberId, subjectId);
+        subjectRepository.tryDecreaseRegistered(subjectId);
+    }
+
+
+    private Subject findSubjectById(Long subjectId) {
+        return subjectRepository.findById(subjectId)
+                .orElseThrow(() -> new ErrorHandler(ErrorStatus.SUBJECT_NOT_FOUND));
+    }
+
+
+    private Member findMemberById(Long memberId) {
         return memberRepository.findById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
     }
 

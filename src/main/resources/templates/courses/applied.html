@@ -75,9 +75,9 @@
     <tr th:each="a : ${applies}">
         <!-- 항상 활성화된 취소 버튼 -->
         <td>
-            <form th:action="@{/courses/cancel}" method="post" style="display:inline">
+            <form th:action="@{/my/cancel}" method="post" style="display:inline">
                 <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
-                <input type="hidden" name="code" th:value="${a.code}">
+                <input type="hidden" name="subjectId" th:value="${a.id}">
                 <button class="btn btn-danger" type="submit">신청취소</button>
             </form>
         </td>

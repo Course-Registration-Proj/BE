@@ -9,6 +9,7 @@ import java.time.LocalTime;
 @Builder
 @Getter
 public class MyRegisteredSubjectResponseDTO {
+    private Long id;
 
     private String subjectName;
 
