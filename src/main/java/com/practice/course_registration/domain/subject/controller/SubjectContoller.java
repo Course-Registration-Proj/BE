@@ -5,6 +5,7 @@ import com.practice.course_registration.domain.subject.dto.SubjectResponseDTO;
 import com.practice.course_registration.domain.subject.service.SubjectQueryService;
 import com.practice.course_registration.domain.subject.service.SubjectService;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
+import com.practice.course_registration.global.security.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,7 +51,7 @@ public class SubjectContoller {
                          Model model,
                          @PageableDefault(size = 15, sort = "subjectName", direction = Sort.Direction.ASC) Pageable pageable) {
 
-        Long memberId = 1L;
+        Long memberId = SecurityUtils.getUserId();
 
         Page<SubjectResponseDTO> subjects = subjectQueryService.searchAllSubject(memberId, filters, pageable);
 
@@ -67,7 +68,7 @@ public class SubjectContoller {
     public String applyCourse(@RequestParam String code,
                               RedirectAttributes redirectAttributes) { // 리다이렉트할 때 데이터 들고갈 수 있게 하는 용도
 
-        Long memberId = 1L;
+        Long memberId = SecurityUtils.getUserId();
         try {
             subjectService.applyCourse(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");

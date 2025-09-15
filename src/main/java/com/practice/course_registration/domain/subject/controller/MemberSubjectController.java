@@ -6,6 +6,7 @@ import com.practice.course_registration.domain.subject.dto.SubjectResponseDTO;
 import com.practice.course_registration.domain.subject.repository.MemberSubjectRepository;
 import com.practice.course_registration.domain.subject.service.SubjectQueryService;
 import com.practice.course_registration.domain.subject.service.SubjectService;
+import com.practice.course_registration.global.security.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -29,7 +30,7 @@ public class MemberSubjectController {
     @GetMapping("/courses")
     public String myCourses(Model model) {
 
-        Long memberId = 1L;
+        Long memberId = SecurityUtils.getUserId();
 
         List<MyRegisteredSubjectResponseDTO> subjects = subjectQueryService.searchMySubject(memberId);
 
@@ -43,7 +44,7 @@ public class MemberSubjectController {
     @PostMapping("/cancel")
     public String cancelCourses(@RequestParam Long subjectId) {
 
-        Long memberId = 1L;
+        Long memberId = SecurityUtils.getUserId();
 
         subjectService.cancelCourse(memberId, subjectId);
 
