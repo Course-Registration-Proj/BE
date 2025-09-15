@@ -5,6 +5,8 @@ import com.practice.course_registration.domain.member.repository.MemberRepositor
 import com.practice.course_registration.domain.subject.domain.MemberSubject;
 import com.practice.course_registration.domain.subject.domain.Subject;
 import com.practice.course_registration.domain.subject.dto.CourseFilterRequestDTO;
+import com.practice.course_registration.domain.subject.dto.MyRegisteredSubjectResponseDTO;
+import com.practice.course_registration.domain.subject.dto.MySubjectResponseDTO;
 import com.practice.course_registration.domain.subject.dto.SubjectResponseDTO;
 import com.practice.course_registration.domain.subject.repository.LikeSubjectRepository;
 import com.practice.course_registration.domain.subject.repository.MemberSubjectRepository;
@@ -22,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -59,7 +62,7 @@ public class SubjectQueryService {
                 .toList();
         log.info("===========페이지 크기 : " + subjectIds.size());
 
-        Set<Long> registeredIds = memberSubjectRepository.findAllByMemberAndSubject(member, subjectIds);
+        Set<Long> registeredIds = memberSubjectRepository.findAllIdByMemberAndSubject(member, subjectIds);
         Set<Long> likedIds = likeSubjectRepository.findAllByMemberAndSubject(member, subjectIds);
 
         return subjects.map(subject -> SubjectResponseDTO.builder()
@@ -74,6 +77,26 @@ public class SubjectQueryService {
                 .liked(likedIds.contains(subject.getId()))
                 .build()
         );
+    }
+
+    public List<MyRegisteredSubjectResponseDTO> searchMySubject(Long memberId) {
+
+        Member member = findById(memberId);
+
+        List<MemberSubject> memberSubjects = memberSubjectRepository.findAllByMember(member);
+        return memberSubjects.stream()
+                .map(MemberSubject::getSubject)
+                .map(subject -> MyRegisteredSubjectResponseDTO.builder()
+                        .subjectName(subject.getSubjectName())
+                        .professorName(subject.getProfessorName())
+                        .limitedNum(subject.getLimitedNum())
+                        .code(subject.getCode())
+                        .subjectDay(subject.getSubjectDay())
+                        .startTime(subject.getStartTime())
+                        .endTime(subject.getEndTime())
+                        .build()
+                )
+                .collect(Collectors.toList());
     }
 
     private Member findById(Long memberId) {

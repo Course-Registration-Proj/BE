@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>신청내역</title>
+    <style>
+        body{font-family:system-ui,Roboto,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;margin:20px;color:#1f2937}
+        h1{margin:0 0 16px;font-size:22px}
+        form.search{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+        label{display:flex;flex-direction:column;font-size:12px;color:#6b7280}
+        input[type="text"]{height:36px;border:1px solid #e5e7eb;border-radius:8px;padding:0 10px;min-width:180px}
+        button[type="submit"]{height:36px;border-radius:8px;border:1px solid #2563eb;background:#2563eb;color:#fff;padding:0 14px;cursor:pointer}
+        table{width:100%;border-collapse:collapse;margin-top:10px}
+        th,td{border:1px solid #e5e7eb;padding:10px;text-align:center;font-size:14px}
+        th{background:#f9fafb;color:#6b7280}
+        .btn{display:inline-block;height:30px;line-height:28px;padding:0 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
+        .btn-blue{border-color:#2563eb;background:#2563eb;color:#fff}
+        .btn-ghost{background:#fff}
+        .btn-danger{border-color:#ef4444;background:#ef4444;color:#fff}
+        .btn.disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
+        .pagination{margin-top:16px;text-align:center}
+        .pagination a,.pagination span{display:inline-block;margin:0 4px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#374151}
+        .pagination .active{background:#eef2ff;border-color:#c7d2fe;font-weight:700}
+        .muted{color:#6b7280;font-size:12px}
+        .status{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px}
+        .status-approved{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+        .status-pending{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+        .status-rejected{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+    </style>
+</head>
+<body>
+
+<h1>신청내역</h1>
+
+<!-- 탭 네비게이션 (그대로 유지) -->
+<nav class="tabs">
+    <a th:href="@{/courses}"
+       th:classappend="${activeTab}=='register' ? ' active'">수강신청</a>
+    <a th:href="@{/my/courses}"
+       th:classappend="${activeTab}=='applied' ? ' active'">신청내역</a>
+    <a th:href="@{/courses/wishlist}"
+       th:classappend="${activeTab}=='wishlist' ? ' active'">희망수업</a>
+</nav>
+
+<style>
+    .tabs{display:flex;gap:10px;margin:14px 0;border-bottom:1px solid #e5e7eb}
+    .tabs a{padding:10px 14px;border:1px solid transparent;border-bottom:none;
+        border-top-left-radius:8px;border-top-right-radius:8px;
+        color:#374151;text-decoration:none}
+    .tabs a:hover{background:#f9fafb}
+    .tabs a.active{background:#fff;border-color:#e5e7eb;border-bottom:1px solid #fff;
+        font-weight:700}
+</style>
+
+
+<!-- 건수 -->
+<div class="muted"
+     th:if="${page != null}"
+     th:text="'총 ' + ${page.totalElements} + '건 / ' + '페이지 ' + (${page.number + 1}) + ' / ' + ${page.totalPages}">
+    총 0건
+</div>
+
+<!-- 📋 신청내역 테이블 -->
+<table aria-label="신청 과목 목록" th:if="${applies != null}">
+    <thead>
+    <tr>
+        <th style="width:110px">신청취소</th>
+        <th>교과명</th>
+        <th style="width:140px">교수명</th>
+        <th style="width:120px">학수번호</th>
+        <th style="width:220px">수업 요일·시간</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="a : ${applies}">
+        <!-- 항상 활성화된 취소 버튼 -->
+        <td>
+            <form th:action="@{/courses/cancel}" method="post" style="display:inline">
+                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+                <input type="hidden" name="code" th:value="${a.code}">
+                <button class="btn btn-danger" type="submit">신청취소</button>
+            </form>
+        </td>
+
+        <td th:text="${a.subjectName}">교과명</td>
+        <td th:text="${a.professorName}">홍길동</td>
+        <td th:text="${a.code}">CS101</td>
+        <td th:text="${a.subjectDay + ' ' + a.startTime + ' ~ ' + a.endTime}">화 13:00 ~ 14:30</td>
+    </tr>
+
+    <!-- 빈 상태 -->
+    <tr th:if="${#lists.isEmpty(applies)}">
+        <td colspan="5">신청한 과목이 없습니다.</td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- 메시지 알림 -->
+<script th:if="${message}" th:inline="javascript">
+    alert([[${message}]]);
+</script>
+
+<script th:if="${errorMessage}" th:inline="javascript">
+    alert([[${errorMessage}]]);
+</script>
+
+</body>
+</html>

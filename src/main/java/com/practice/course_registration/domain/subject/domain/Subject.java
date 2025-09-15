@@ -26,6 +26,8 @@ public class Subject extends BaseEntity {
 
     private Integer limitedNum; // 제한인원
 
+    private Integer registeredNum; // 현재신청인원
+
     private String code;
 
     @Enumerated(EnumType.STRING)

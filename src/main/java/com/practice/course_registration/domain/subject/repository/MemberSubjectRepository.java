@@ -18,7 +18,9 @@ public interface MemberSubjectRepository extends JpaRepository<MemberSubject, Lo
       FROM MemberSubject ms
       WHERE ms.member = :member AND ms.subject.id IN :subjectIds
     """)
-    Set<Long> findAllByMemberAndSubject(@Param("member") Member member, @Param("subjectIds") List<Long> subjectIds);
+    Set<Long> findAllIdByMemberAndSubject(@Param("member") Member member, @Param("subjectIds") List<Long> subjectIds);
 
     Optional<MemberSubject> findByMemberAndSubject(Member member, Subject subject);
+
+    List<MemberSubject> findAllByMember(Member member);
 }
