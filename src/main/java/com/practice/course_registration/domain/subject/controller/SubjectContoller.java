@@ -48,7 +48,7 @@ public class SubjectContoller {
     @GetMapping("/search")
     public String search(CourseFilterRequestDTO filters,
                          Model model,
-                         @PageableDefault(size = 3, sort = "subjectName", direction = Sort.Direction.ASC) Pageable pageable) {
+                         @PageableDefault(size = 15, sort = "subjectName", direction = Sort.Direction.ASC) Pageable pageable) {
 
         Long memberId = 1L;
 
