@@ -4,6 +4,7 @@ import com.practice.course_registration.global.common.BaseEntity;
 import com.practice.course_registration.global.enums.SubjectDay;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -25,6 +26,9 @@ public class Subject extends BaseEntity {
     private String professorName;
 
     private Integer limitedNum; // 제한인원
+
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private Integer registeredNum; // 현재신청인원
 
     private String code;
 

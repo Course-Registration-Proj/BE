@@ -4,6 +4,7 @@ import com.practice.course_registration.domain.subject.domain.Subject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -27,4 +28,23 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
                                                               Pageable pageable);
 
     Optional<Subject> findByCode(String code);
+
+
+    @Modifying
+    @Query("""
+        UPDATE Subject s
+        SET s.registeredNum = s.registeredNum + 1
+        WHERE s.id = :id
+        AND s.registeredNum < s.limitedNum
+    """)
+    int tryIncreaseRegistered(@Param("id") Long subjectId);
+
+    @Modifying
+    @Query("""
+        UPDATE Subject s
+        SET s.registeredNum = s.registeredNum - 1
+        WHERE s.id = :id
+        AND s.registeredNum < s.limitedNum
+    """)
+    int tryDecreaseRegistered(@Param("id") Long subjectId);
 }
