@@ -15,4 +15,6 @@ public class LikeSubjectDTO {
 
     private String code;
     private SubjectDay subjectDay;
+
+    private boolean isRegistered;
 }
