@@ -93,7 +93,9 @@ public class LikeSubjectService {
                     .limitedNum(subject.getLimitedNum())
                     .code(subject.getCode())
                     .subjectDay(subject.getSubjectDay())
-                    .isRegistered(isRegistered) // 추가
+                    .startTime(subject.getStartTime())
+                    .endTime(subject.getEndTime())
+                    .isRegistered(isRegistered)
                     .build();
         });
     }
