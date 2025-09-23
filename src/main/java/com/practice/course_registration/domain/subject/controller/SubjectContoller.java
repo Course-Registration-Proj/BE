@@ -77,6 +77,6 @@ public class SubjectContoller {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        return "redirect:/courses";
+        return "redirect:/courses/search";
     }
 }
