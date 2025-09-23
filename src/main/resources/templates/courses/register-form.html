@@ -146,6 +146,82 @@
     </a>
 </div>
 
+
+<!-- 희망수업 탭 내용 -->
+<div th:if="${activeTab == 'wishlist'}">
+    <!-- 희망과목 건수 표시 -->
+    <div class="muted" th:if="${likeSubjectPage != null}"
+         th:text="'총 ' + ${likeSubjectPage.totalElements} + '개 희망과목 / ' + '페이지 ' + (${likeSubjectPage.number + 1}) + ' / ' + ${likeSubjectPage.totalPages}">
+        총 0개 희망과목
+    </div>
+
+    <!-- 희망과목 테이블 -->
+    <table th:if="${likeSubjectPage != null and !likeSubjectPage.empty}">
+        <thead>
+        <tr>
+            <th style="width:110px">수강신청</th>
+            <th style="width:110px">희망삭제</th>
+            <th>교과명</th>
+            <th style="width:140px">교수명</th>
+            <th style="width:120px">제한인원</th>
+            <th style="width:140px">학수번호</th>
+            <th style="width:260px">수업 요일</th>
+
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="likeSubject : ${likeSubjectPage.content}">
+            <td>
+                <form th:if="${!likeSubject.isRegistered}" th:action="@{/apply}" method="post" style="display: inline;">
+                    <input type="hidden" name="code" th:value="${likeSubject.code}" />
+                    <button type="submit" class="btn btn-blue">수강신청</button>
+                </form>
+
+                <span th:if="${likeSubject.isRegistered}" style="color:gray;"></span>
+            </td>
+
+            <td>
+                <form th:action="@{/remove-wish}" method="post" style="display: inline;">
+                    <input type="hidden" name="code" th:value="${likeSubject.code}" />
+                    <button type="submit" class="btn btn-ghost"
+                            onclick="return confirm('희망과목에서 삭제하시겠습니까?')">삭제</button>
+                </form>
+            </td>
+
+            <td th:text="${likeSubject.subjectName}">과목명</td>
+            <td th:text="${likeSubject.professorName}">교수명</td>
+            <td th:text="${likeSubject.limitedNum}">30</td>
+            <td th:text="${likeSubject.code}">과목코드</td>
+            <td th:text="${likeSubject.subjectDay + ' ' + likeSubject.startTime + ' ~ ' + likeSubject.endTime}">월요일 09:00 ~ 10:30</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- 희망과목이 없을 때 -->
+    <div th:if="${likeSubjectPage == null or likeSubjectPage.empty}">
+        <p style="text-align: center; color: #6b7280; margin: 50px 0;">희망 과목이 없습니다.</p>
+    </div>
+
+    <!-- 희망과목 페이징 -->
+    <div class="pagination" th:if="${likeSubjectPage != null and likeSubjectPage.totalPages > 1}">
+        <a th:if="${likeSubjectPage.hasPrevious()}"
+           th:href="@{/courses/wishlist(page=${likeSubjectPage.number-1}, size=${likeSubjectPage.size})}">
+            이전
+        </a>
+
+        <span th:each="i : ${#numbers.sequence(0, likeSubjectPage.totalPages - 1)}"
+              th:classappend="${i == likeSubjectPage.number} ? 'active'">
+            <a th:href="@{/courses/wishlist(page=${i}, size=${likeSubjectPage.size})}"
+               th:text="${i + 1}">1</a>
+        </span>
+
+        <a th:if="${likeSubjectPage.hasNext()}"
+           th:href="@{/courses/wishlist(page=${likeSubjectPage.number+1}, size=${likeSubjectPage.size})}">
+            다음
+        </a>
+    </div>
+</div>
+
 <script th:if="${message}" th:inline="javascript">
     alert([[${message}]]);
 </script>

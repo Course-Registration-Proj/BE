@@ -2,30 +2,214 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>회원가입</title>
+    <title>한양대학교 포털 회원가입</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 15px;
+            background: #4a90e2;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .form-group.half {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group label .required {
+            color: #e53e3e;
+            margin-left: 4px;
+        }
+
+        .form-group label .optional {
+            color: #666;
+            font-weight: 400;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .form-group input[type="email"]::placeholder {
+            font-style: italic;
+        }
+
+        .btn-signup {
+            width: 100%;
+            padding: 16px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 30px 0 20px;
+        }
+
+        .btn-signup:hover {
+            background: #357abd;
+        }
+
+        .link-section {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e1e5e9;
+        }
+
+        .link-section a {
+            color: #4a90e2;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .link-section a:hover {
+            text-decoration: underline;
+        }
+
+        .info-text {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+    </style>
 </head>
 <body>
-<h2>회원가입 정보 입력</h2>
-<form th:action="@{/join}" method="post">
-    <label for="memberName">이름:</label>
-    <input type="text" id="memberName" name="memberName" required/><br/><br/>
+<div class="container">
+    <div class="header">
+        <div class="logo">HY</div>
+        <h1 class="title">한양대학교 포털</h1>
+        <p class="subtitle">학사 관리 시스템 회원가입</p>
+    </div>
 
-    <label for="memberNumber">학번:</label>
-    <input type="text" id="memberNumber" name="memberNumber" required/><br/><br/>
+    <div class="info-text">
+        재학생만 가입 가능합니다. 정확한 학번과 이름을 입력해 주세요.
+    </div>
 
-    <label for="grade">학년:</label>
-    <input type="number" id="grade" name="grade" min="1" max="4" required/><br/><br/>
+    <form th:action="@{/join}" method="post">
+        <div class="form-row">
+            <div class="form-group half">
+                <label for="memberName">이름<span class="required">*</span></label>
+                <input type="text" id="memberName" name="memberName" placeholder="실명을 입력하세요" required/>
+            </div>
+            <div class="form-group half">
+                <label for="grade">학년<span class="required">*</span></label>
+                <input type="number" id="grade" name="grade" min="1" max="4" placeholder="1~4" required/>
+            </div>
+        </div>
 
-    <label for="memberEmail">이메일:</label>
-    <input type="email" id="memberEmail" name="memberEmail" placeholder="선택사항"/><br/><br/>
+        <div class="form-group">
+            <label for="memberNumber">학번<span class="required">*</span></label>
+            <input type="text" id="memberNumber" name="memberNumber" placeholder="예: 2023012345" required/>
+        </div>
 
-    <label for="memberId">로그인 ID:</label>
-    <input type="text" id="memberId" name="memberId" required/><br/><br/>
+        <div class="form-group">
+            <label for="memberEmail">이메일<span class="optional">(선택)</span></label>
+            <input type="email" id="memberEmail" name="memberEmail" placeholder="example@hanyang.ac.kr"/>
+        </div>
 
-    <label for="password">비밀번호:</label>
-    <input type="password" id="password" name="password" required/><br/><br/>
+        <div class="form-group">
+            <label for="memberId">로그인 ID<span class="required">*</span></label>
+            <input type="text" id="memberId" name="memberId" placeholder="영문, 숫자 조합 4-20자" required/>
+        </div>
 
-    <button type="submit">회원가입</button>
-</form>
+        <div class="form-group">
+            <label for="password">비밀번호<span class="required">*</span></label>
+            <input type="password" id="password" name="password" placeholder="영문, 숫자, 특수문자 조합 8자 이상" required/>
+        </div>
+
+        <button type="submit" class="btn-signup">회원가입</button>
+    </form>
+
+    <div class="link-section">
+        <span>이미 계정이 있으신가요? </span>
+        <a th:href="@{/login}">로그인하기</a>
+    </div>
+</div>
 </body>
 </html>

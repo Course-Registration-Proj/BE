@@ -31,6 +31,7 @@ public class SubjectContoller {
     private final SubjectService subjectService;
     private final SubjectQueryService subjectQueryService;
 
+
     /*
     * 기본 수강신청 페이지
     * */
@@ -66,7 +67,7 @@ public class SubjectContoller {
 
     @PostMapping("/apply")
     public String applyCourse(@RequestParam String code,
-                              RedirectAttributes redirectAttributes) { // 리다이렉트할 때 데이터 들고갈 수 있게 하는 용도
+                              RedirectAttributes redirectAttributes) {
 
         Long memberId = SecurityUtils.getUserId();
         try {

@@ -23,6 +23,8 @@ public interface MemberSubjectRepository extends JpaRepository<MemberSubject, Lo
 
     Optional<MemberSubject> findByMemberAndSubject(Member member, Subject subject);
 
+    Optional<MemberSubject> findByMemberIdAndSubjectId(Long memberId, Long subjectId);
+
     List<MemberSubject> findAllByMember(Member member);
 
     @Modifying
