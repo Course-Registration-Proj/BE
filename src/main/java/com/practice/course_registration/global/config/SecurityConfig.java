@@ -41,7 +41,7 @@ public class SecurityConfig {
         http
                 .formLogin((form) -> form
                         .loginPage("/login") // 로그인 성공 시 redirect url 추후 작성
-                        .defaultSuccessUrl("/courses")
+                        .defaultSuccessUrl("/courses", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
                 );
