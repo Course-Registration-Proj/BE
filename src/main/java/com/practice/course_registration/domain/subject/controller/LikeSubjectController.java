@@ -62,13 +62,9 @@ public class LikeSubjectController {
         Long id = SecurityUtils.getUserId();
         Page<LikeSubjectDTO> likeSubjectPage = likeSubjectService.getLikeSubjectsByUserId(id, page, size);
 
-        model.addAttribute("likeSubjectPage", likeSubjectPage);
-        model.addAttribute("activeTab", "wishlist");
-        model.addAttribute("subjects", List.of());
-        model.addAttribute("filters", new CourseFilterRequestDTO());
-        model.addAttribute("hasSearched", false);
+        model.addAttribute("likeSubjectPage", likeSubjectPage);;
 
-        return "courses/register-form";
+        return "courses/wishlist";
     }
 
     @PostMapping("/apply")
