@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>희망수업 - 수강신청</title>
+    <style>
+        /* 기존 스타일을 복사 */
+        body{font-family:system-ui,Roboto,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;margin:20px;color:#1f2937}
+        h1{margin:0 0 16px;font-size:22px}
+        table{width:100%;border-collapse:collapse;margin-top:10px}
+        th,td{border:1px solid #e5e7eb;padding:10px;text-align:center;font-size:14px}
+        th{background:#f9fafb;color:#6b7280}
+        .btn{display:inline-block;height:30px;line-height:28px;padding:0 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
+        .btn-blue{border-color:#2563eb;background:#2563eb;color:#fff}
+        .btn-ghost{background:#fff}
+        .pagination{margin-top:16px;text-align:center}
+        .pagination a,.pagination span{display:inline-block;margin:0 4px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#374151}
+        .pagination .active{background:#eef2ff;border-color:#c7d2fe;font-weight:700}
+        .muted{color:#6b7280;font-size:12px}
+        .tabs{display:flex;gap:10px;margin:14px 0;border-bottom:1px solid #e5e7eb}
+        .tabs a{padding:10px 14px;border:1px solid transparent;border-bottom:none;
+            border-top-left-radius:8px;border-top-right-radius:8px;
+            color:#374151;text-decoration:none}
+        .tabs a:hover{background:#f9fafb}
+        .tabs a.active{background:#fff;border-color:#e5e7eb;border-bottom:1px solid #fff;
+            font-weight:700}
+    </style>
+</head>
+<body>
+
+<h1>희망수업</h1>
+
+<!-- 탭 네비게이션 -->
+<nav class="tabs">
+    <a th:href="@{/courses}">수강신청</a>
+    <a th:href="@{/my/courses}">신청내역</a>
+    <a th:href="@{/courses/wishlist}" class="active">희망수업</a>
+</nav>
+
+<!-- 희망과목 건수 표시 -->
+<div class="muted" th:if="${likeSubjectPage != null}"
+     th:text="'총 ' + ${likeSubjectPage.totalElements} + '개 희망과목 / ' + '페이지 ' + (${likeSubjectPage.number + 1}) + ' / ' + ${likeSubjectPage.totalPages}">
+    총 0개 희망과목
+</div>
+
+<!-- 희망과목 테이블 -->
+<table th:if="${likeSubjectPage != null and !likeSubjectPage.empty}">
+    <thead>
+    <tr>
+        <th style="width:110px">수강신청</th>
+        <th style="width:110px">희망삭제</th>
+        <th>교과명</th>
+        <th style="width:140px">교수명</th>
+        <th style="width:120px">제한인원</th>
+        <th style="width:140px">학수번호</th>
+        <th style="width:260px">수업 요일</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="likeSubject : ${likeSubjectPage.content}">
+        <td>
+            <form th:if="${!likeSubject.isRegistered}" th:action="@{/apply}" method="post" style="display: inline;">
+                <input type="hidden" name="code" th:value="${likeSubject.code}" />
+                <button type="submit" class="btn btn-blue">수강신청</button>
+            </form>
+            <span th:if="${likeSubject.isRegistered}" style="color:gray;">신청완료</span>
+        </td>
+        <td>
+            <form th:action="@{/remove-wish}" method="post" style="display: inline;">
+                <input type="hidden" name="code" th:value="${likeSubject.code}" />
+                <button type="submit" class="btn btn-ghost"
+                        onclick="return confirm('희망과목에서 삭제하시겠습니까?')">삭제</button>
+            </form>
+        </td>
+        <td th:text="${likeSubject.subjectName}">과목명</td>
+        <td th:text="${likeSubject.professorName}">교수명</td>
+        <td th:text="${likeSubject.limitedNum}">30</td>
+        <td th:text="${likeSubject.code}">과목코드</td>
+        <td th:text="${likeSubject.subjectDay + ' ' + likeSubject.startTime + ' ~ ' + likeSubject.endTime}">월요일 09:00 ~ 10:30</td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- 희망과목이 없을 때 -->
+<div th:if="${likeSubjectPage == null or likeSubjectPage.empty}">
+    <p style="text-align: center; color: #6b7280; margin: 50px 0;">희망 과목이 없습니다.</p>
+</div>
+
+<!-- 희망과목 페이징 -->
+<div class="pagination" th:if="${likeSubjectPage != null and likeSubjectPage.totalPages > 1}">
+    <a th:if="${likeSubjectPage.hasPrevious()}"
+       th:href="@{/courses/wishlist(page=${likeSubjectPage.number-1}, size=${likeSubjectPage.size})}">
+        이전
+    </a>
+
+    <span th:each="i : ${#numbers.sequence(0, likeSubjectPage.totalPages - 1)}"
+          th:classappend="${i == likeSubjectPage.number} ? 'active'">
+        <a th:href="@{/courses/wishlist(page=${i}, size=${likeSubjectPage.size})}"
+           th:text="${i + 1}">1</a>
+    </span>
+
+    <a th:if="${likeSubjectPage.hasNext()}"
+       th:href="@{/courses/wishlist(page=${likeSubjectPage.number+1}, size=${likeSubjectPage.size})}">
+        다음
+    </a>
+</div>
+
+<script th:if="${message}" th:inline="javascript">
+    alert([[${message}]]);
+</script>
+
+<script th:if="${errorMessage}" th:inline="javascript">
+    alert([[${errorMessage}]]);
+</script>
+
+</body>
+</html>
