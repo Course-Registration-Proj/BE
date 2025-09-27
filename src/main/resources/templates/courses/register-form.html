@@ -147,12 +147,21 @@
 </div>
 
 
-<script th:if="${message}" th:inline="javascript">
-    alert([[${message}]]);
-</script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    window.addEventListener('DOMContentLoaded', function() {
+        var message = /*[[${message}]]*/ null;
+        var errorMessage = /*[[${errorMessage}]]*/ null;
 
-<script th:if="${errorMessage}" th:inline="javascript">
-    alert([[${errorMessage}]]);
+        if (message) {
+            alert(message);
+        }
+
+        if (errorMessage) {
+            alert(errorMessage);
+        }
+    });
+    /*]]>*/
 </script>
 
 </body>

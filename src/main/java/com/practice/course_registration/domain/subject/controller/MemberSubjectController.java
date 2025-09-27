@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -27,6 +28,7 @@ public class MemberSubjectController {
     private final SubjectQueryService subjectQueryService;
     private final SubjectService subjectService;
 
+    // 신청내역
     @GetMapping("/courses")
     public String myCourses(Model model) {
 
@@ -41,12 +43,14 @@ public class MemberSubjectController {
 
     }
 
+    // 수강취소
     @PostMapping("/cancel")
-    public String cancelCourses(@RequestParam Long subjectId) {
+    public String cancelCourses(@RequestParam Long subjectId, RedirectAttributes redirectAttributes) {
 
         Long memberId = SecurityUtils.getUserId();
 
         subjectService.cancelCourse(memberId, subjectId);
+        redirectAttributes.addFlashAttribute("message", "수강신청이 취소되었습니다");
 
         return "redirect:/my/courses";
     }
