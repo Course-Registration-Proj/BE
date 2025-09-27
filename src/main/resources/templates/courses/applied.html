@@ -68,6 +68,7 @@
         <th>교과명</th>
         <th style="width:140px">교수명</th>
         <th style="width:120px">학수번호</th>
+        <th style="width:80px">학점</th>
         <th style="width:220px">수업 요일·시간</th>
     </tr>
     </thead>
@@ -84,13 +85,14 @@
 
         <td th:text="${a.subjectName}">교과명</td>
         <td th:text="${a.professorName}">홍길동</td>
+        <td th:text="${a.score + '학점'}">3학점</td>
         <td th:text="${a.code}">CS101</td>
         <td th:text="${a.subjectDay + ' ' + a.startTime + ' ~ ' + a.endTime}">화 13:00 ~ 14:30</td>
     </tr>
 
     <!-- 빈 상태 -->
     <tr th:if="${#lists.isEmpty(applies)}">
-        <td colspan="5">신청한 과목이 없습니다.</td>
+        <td colspan="6">신청한 과목이 없습니다.</td>
     </tr>
     </tbody>
 </table>
