@@ -65,6 +65,7 @@ public class SubjectContoller {
         return "courses/register-form";
     }
 
+    // 수강신청
     @PostMapping("/apply")
     public String applyCourse(@RequestParam String code,
                               RedirectAttributes redirectAttributes) {
@@ -74,7 +75,7 @@ public class SubjectContoller {
             subjectService.applyCourse(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");
         } catch (ErrorHandler e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            redirectAttributes.addFlashAttribute("errorMessage", e.getErrorReason().getMessage());
         }
 
         return "redirect:/courses/search";
