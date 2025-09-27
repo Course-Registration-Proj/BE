@@ -31,7 +31,8 @@ public enum ErrorStatus implements BaseErrorCode {
     ALREADY_APPLY_SUBJECT(HttpStatus.BAD_REQUEST, "SUBJECT4002", "이미 신청한 과목입니다."),
     NOT_APPLY_SUBJECT(HttpStatus.BAD_REQUEST, "SUBJECT4003", "해당 과목을 신청하지 않았습니다."),
     CONFLICT_COURSE_TIME(HttpStatus.BAD_REQUEST, "SUBJECT4004", "동일한 시간대에 신청한 과목이 있습니다."),
-    CAPACITY_FULL(HttpStatus.BAD_REQUEST, "SUBJECT4005", "제한 인원이 가득 찼습니다.")
+    CAPACITY_FULL(HttpStatus.BAD_REQUEST, "SUBJECT4005", "제한 인원이 가득 찼습니다."),
+    OVER_SOCRE_POSSIBLE(HttpStatus.BAD_REQUEST, "SUBJECT4006", "신청 가능한 학점을 초과했습니다."),
 
     ;
 

@@ -79,4 +79,8 @@ public class Member extends BaseEntity {
     public void addScore(int subjectScore) {
         this.registeredScore += subjectScore;
     }
+
+    public void cancelScore(int subjectScore) {
+        this.registeredScore -= subjectScore;
+    }
 }
