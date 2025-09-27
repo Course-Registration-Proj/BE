@@ -16,6 +16,8 @@ public class SubjectResponseDTO {
 
     private Integer limitedNum; // 제한인원
 
+    private Integer registeredNum;
+
     private String code;
 
     private Integer score;
