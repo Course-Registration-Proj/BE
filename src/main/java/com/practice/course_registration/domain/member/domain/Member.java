@@ -39,6 +39,9 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private String password; // 로그인용 PW
 
+    @Column(nullable = false)
+    private int registeredScore; // 신청 학점
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -71,5 +74,9 @@ public class Member extends BaseEntity {
 
     public void changeRole(Role newRole) {
         this.role = newRole;
+    }
+
+    public void addScore(int subjectScore) {
+        this.registeredScore += subjectScore;
     }
 }

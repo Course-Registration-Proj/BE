@@ -92,6 +92,7 @@ public class LikeSubjectService {
                     .professorName(subject.getProfessorName())
                     .limitedNum(subject.getLimitedNum())
                     .code(subject.getCode())
+                    .score(subject.getScore())
                     .subjectDay(subject.getSubjectDay())
                     .startTime(subject.getStartTime())
                     .endTime(subject.getEndTime())

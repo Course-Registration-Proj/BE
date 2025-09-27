@@ -18,6 +18,8 @@ public class MySubjectResponseDTO {
 
     private String code;
 
+    private Integer score;
+
     private SubjectDay subjectDay; // 수업 요일 (교양이라 하루만 한다는 전제)
 
     private LocalTime startTime;
