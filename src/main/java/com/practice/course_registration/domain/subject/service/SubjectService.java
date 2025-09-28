@@ -25,7 +25,7 @@ public class SubjectService {
     private final SubjectRepository subjectRepository;
     private final MemberSubjectRepository memberSubjectRepository;
     private final MemberRepository memberRepository;
-
+    private static final int MAX_SCORE = 10;
 
     // 수강신청
     public void applyCourse(Long memberId, String code) {
@@ -44,6 +44,10 @@ public class SubjectService {
         * */
         if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
+        }
+
+        if (member.getRegisteredScore() + subject.getScore() > MAX_SCORE) {
+            throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
         }
 
         boolean conflict = member.getMemberSubjects().stream()
@@ -80,6 +84,8 @@ public class SubjectService {
             throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
         }
 
+        // 신청학점 추가
+        member.addScore(subject.getScore());
 
         // 저장
         MemberSubject memberSubject = MemberSubject.builder()
@@ -106,6 +112,8 @@ public class SubjectService {
         MemberSubject memberSubject = memberSubjectRepository.findByMemberAndSubject(member, subject)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.NOT_APPLY_SUBJECT));
 
+        // 신청 학점 줄이기
+        member.cancelScore(subject.getScore());
 
         memberSubjectRepository.deleteByMemberIdAndSubjectId(memberId, subjectId);
         subjectRepository.tryDecreaseRegistered(subjectId);
