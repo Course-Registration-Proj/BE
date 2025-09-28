@@ -40,9 +40,11 @@ public class Subject extends BaseEntity {
     private LocalTime endTime;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<MemberSubject> memberSubjects = new ArrayList<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
+    @Builder.Default
     private List<LikeSubject> likeSubjects = new ArrayList<>();
 
 
