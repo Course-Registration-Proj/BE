@@ -19,6 +19,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Grant permission for gradlew
+      run: chmod +x gradlew
+
     - name: Run tests
       run: ./gradlew test
 
@@ -35,6 +38,10 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Grant permission for gradlew
+        run: chmod +x gradlew
+
 
       - name: Clean and Build JAR
         run: |
