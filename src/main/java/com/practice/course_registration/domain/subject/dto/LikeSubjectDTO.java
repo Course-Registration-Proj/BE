@@ -16,6 +16,7 @@ public class LikeSubjectDTO {
     private Integer registeredNum;
 
     private String code;
+    private Integer score;
     private SubjectDay subjectDay;
 
     private LocalTime startTime;
