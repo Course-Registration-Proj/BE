@@ -69,6 +69,7 @@ jobs:
 
             # 새 컨테이너 실행
             sudo docker run -d -p 8080:8080 \
+              -e SPRING_PROFILES_ACTIVE=prod
               -e DB_HOST=${{ secrets.DB_HOST }} \
               -e DB_PORT=${{ secrets.DB_PORT }} \
               -e DB_NAME=${{ secrets.DB_NAME }} \
