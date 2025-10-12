@@ -5,6 +5,7 @@ import com.practice.course_registration.domain.subject.dto.SubjectResponseDTO;
 import com.practice.course_registration.domain.subject.service.SubjectQueryService;
 import com.practice.course_registration.domain.subject.service.SubjectService;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
+import com.practice.course_registration.global.kafka.KafkaProducer;
 import com.practice.course_registration.global.security.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,8 +29,8 @@ import java.util.List;
 @Validated
 public class SubjectContoller {
 
-    private final SubjectService subjectService;
     private final SubjectQueryService subjectQueryService;
+    private final KafkaProducer kafkaProducer;
 
 
     /*
@@ -72,7 +73,9 @@ public class SubjectContoller {
 
         Long memberId = SecurityUtils.getUserId();
         try {
-            subjectService.applyCourse(memberId, code);
+//            subjectService.applyCourse(memberId, code);
+            // 원래는 저장해야하지만, Kafka에 메시지를 전송시켜서 apply 기능을 위임함.
+            kafkaProducer.create(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");
         } catch (ErrorHandler e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getErrorReason().getMessage());
