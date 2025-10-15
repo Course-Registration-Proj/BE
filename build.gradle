@@ -57,6 +57,10 @@ dependencies {
 
 	// kafka
 	implementation 'org.springframework.kafka:spring-kafka'
+
+	// redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'io.lettuce:lettuce-core'
 }
 
 tasks.named('test') {
