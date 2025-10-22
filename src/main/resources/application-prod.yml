@@ -21,8 +21,14 @@ spring:
       hibernate:
         format_sql: true
 
-#  mvc:
-#    throw-exception-if-no-handler-found: true
+  data:
+    redis:
+      host: redis
+      port: 6379
+      connect-timeout: 2000
+
+  #  mvc:
+  #    throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
