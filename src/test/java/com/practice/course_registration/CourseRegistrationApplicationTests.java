@@ -6,19 +6,13 @@ import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 class CourseRegistrationApplicationTests {
-    @TestConfiguration
-    static class TestConfig {
-        @Bean
-        public KafkaProducer kafkaProducer() {
-            // 실제 KafkaTemplate 등 의존을 가진 KafkaProducer를 Mockito로 대체
-            return Mockito.mock(KafkaProducer.class);
-        }
-        // 필요한 경우 KafkaTemplate 같은 다른 빈들도 여기서 mock으로 등록
-    }
-
+    @MockitoBean
+    private KafkaProducer kafkaProducer;
 	@Test
 	void contextLoads() {
 	}
