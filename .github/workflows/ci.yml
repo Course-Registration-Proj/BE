@@ -25,11 +25,6 @@ jobs:
           KAFKA_BROKER_ID: 1
           KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
           KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-        options: >-
-          --health-cmd "kafka-topics --bootstrap-server localhost:9092 --list || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 12
     
 
     steps:
