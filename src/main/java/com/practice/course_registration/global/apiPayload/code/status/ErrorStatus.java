@@ -34,6 +34,11 @@ public enum ErrorStatus implements BaseErrorCode {
     CAPACITY_FULL(HttpStatus.BAD_REQUEST, "SUBJECT4005", "제한 인원이 가득 찼습니다."),
     OVER_SOCRE_POSSIBLE(HttpStatus.BAD_REQUEST, "SUBJECT4006", "신청 가능한 학점을 초과했습니다."),
 
+
+    // apply (수강신청 관련)
+    TOO_MANY_REQUESTS(HttpStatus.BAD_REQUEST, "APPLY4001", "처리중입니다."),
+    DUPLICATE_REQUEST(HttpStatus.BAD_REQUEST, "APPLY4002", "동일한 요청이 이미 처리중입니다."),
+
     ;
 
     private final HttpStatus httpStatus;

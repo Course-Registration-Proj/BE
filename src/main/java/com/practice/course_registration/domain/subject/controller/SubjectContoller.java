@@ -31,6 +31,7 @@ public class SubjectContoller {
 
     private final SubjectQueryService subjectQueryService;
     private final KafkaProducer kafkaProducer;
+//    private final SubjectService subjectService;
 
 
     /*
