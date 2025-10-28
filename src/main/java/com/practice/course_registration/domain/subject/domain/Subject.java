@@ -30,6 +30,7 @@ public class Subject extends BaseEntity {
     @Column(nullable = false, columnDefinition = "int default 0")
     private Integer registeredNum; // 현재신청인원
 
+    @Column(unique = true)
     private String code;
 
     @Column(nullable = false)
