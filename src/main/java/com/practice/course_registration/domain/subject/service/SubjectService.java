@@ -8,6 +8,7 @@ import com.practice.course_registration.domain.subject.repository.MemberSubjectR
 import com.practice.course_registration.domain.subject.repository.SubjectRepository;
 import com.practice.course_registration.global.apiPayload.code.status.ErrorStatus;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
+import com.practice.course_registration.global.redis.repository.LuaRepository;
 import com.practice.course_registration.global.redis.service.IdempotencyService;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
@@ -29,11 +30,13 @@ public class SubjectService {
     private final MemberSubjectRepository memberSubjectRepository;
     private final MemberRepository memberRepository;
     private final IdempotencyService idempotencyService;
+    private final LuaRepository luaRepository;
 
     private static final int MAX_SCORE = 10;
     private static final int RATE_LIMIT_CNT = 5;
     private static final int RATE_LIMIT_TTL = 1;
     private static final int IDEM_KEY_TTL = 15;
+    private static final int HOLD_TTL = 120; // 수강신청 성공여부 결정나도 안전망용 ttl
 
     // 수강신청
     /*
@@ -55,6 +58,8 @@ public class SubjectService {
             throw new ErrorHandler(ErrorStatus.DUPLICATE_REQUEST);
         }
 
+        // Lua 선점 여부 확인
+        boolean held = false;
         try {
             // 멤버 찾기
             Member member = findMemberById(memberId);
@@ -97,10 +102,21 @@ public class SubjectService {
                 throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
             }
 
+            // 원자성 추가
+            String luaResult = luaRepository.hold(subject.getId(), memberId, subject.getLimitedNum(), HOLD_TTL);
+            switch (luaResult) {
+                case "OK" -> held = true;
+                case "ALREADY_ENROLLED" -> throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
+                case "CAPACITY_FULL" -> throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
+                default -> throw new IllegalStateException("lua 스크립트 오류 - " + luaResult); // 추후 핸들러로 변경
+            }
+
             int result = subjectRepository.tryIncreaseRegistered(subject.getId());
 
             if (result == 0) {
                 log.error("제한인원 초과, 제한인원 : " + subject.getLimitedNum() + " , 신청인원 : " + subject.getRegisteredNum());
+                // redis 롤백
+                luaRepository.rollback(subject.getId(), memberId);
                 throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
             }
 
@@ -116,6 +132,9 @@ public class SubjectService {
             memberSubjectRepository.save(memberSubject);
             member.getMemberSubjects().add(memberSubject);
             subject.getMemberSubjects().add(memberSubject);
+
+            // redis hold key 삭제
+            luaRepository.deleteHoldKeyOnly(subject.getId(), memberId);
 
         } catch (ErrorHandler e) {
             idempotencyService.releaseIdempotency(memberId, code);
@@ -144,6 +163,9 @@ public class SubjectService {
 
         memberSubjectRepository.deleteByMemberIdAndSubjectId(memberId, subjectId);
         subjectRepository.tryDecreaseRegistered(subjectId);
+
+        // redis 반영
+        luaRepository.cancelEnrolled(subject.getId(), memberId);
     }
 
 

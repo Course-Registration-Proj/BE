@@ -18,17 +18,17 @@ public class RedisKeyUtils {
     }
 
     // 현재 신청 인원
-    public static String courseRestStockKey(String courseId) {
+    public static String courseRestStockKey(Long courseId) {
         return COURSE_PREFIX + courseId + ":applied";
     }
 
     // 해당 과목 신청 확정유저 set
-    public static String courseMemberKey(String courseId) {
+    public static String courseMemberKey(Long courseId) {
         return COURSE_PREFIX + courseId + ":users";
     }
 
     // 임시 예약 상태 키 (신청 확정은 kafka consumer에서 진행)
-    public static String reservationKey(String courseId, Long memberId) {
+    public static String reservationKey(Long courseId, Long memberId) {
         return RESERVATION_PREFIX + courseId + ":" + memberId;
     }
 

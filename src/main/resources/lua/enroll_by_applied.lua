@@ -5,7 +5,7 @@
 -- ARGV[2] = limit 인원
 -- ARGV[3] = holdTtlSeconds
 
--- 이미 누군가가 신청했는지 체크
+-- 이미 신청한 과목인지 체크
 -- SISMEMBER : Set 안에 주어진 member가 있는지 확인하는 명령
 local already = redis.call('SISMEMBER', KEYS[2], ARGV[1])
 if already == 1 then
