@@ -17,9 +17,9 @@ public class RedisKeyUtils {
         return RATE_LIMIT_KEY_PREFIX + memberId;
     }
 
-    // 남은 좌석 수 key
+    // 현재 신청 인원
     public static String courseRestStockKey(String courseId) {
-        return COURSE_PREFIX + courseId + ":stock";
+        return COURSE_PREFIX + courseId + ":applied";
     }
 
     // 해당 과목 신청 확정유저 set
