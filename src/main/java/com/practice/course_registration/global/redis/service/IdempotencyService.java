@@ -1,7 +1,9 @@
 package com.practice.course_registration.global.redis.service;
 
+import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.cache.CacheProperties.Redis;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +12,9 @@ import org.springframework.stereotype.Service;
 public class IdempotencyService {
 
     private final StringRedisTemplate stringRedisTemplate;
-    private static final String RATE_LIMIT_KEY_PREFIX = "rate:limit:"; // rate limit key
-    private static final String IDEMPOTENCY_KEY_PREFIX = "idem:"; // 멱등키 prefix
 
-    public boolean rateLimitAllow(String k, int limit, Duration ttl) {
-        String key = RATE_LIMIT_KEY_PREFIX + k;
+    public boolean rateLimitAllow(Long memberId, int limit, Duration ttl) {
+        String key = RedisKeyUtils.rateLimitKey(memberId);
         Long cnt = stringRedisTemplate.opsForValue().increment(key);
         System.out.println("cnt : " + cnt);
         // 첫 요청인 경우 -> TTL 1로 세팅
@@ -39,7 +39,7 @@ public class IdempotencyService {
     }
 
     private String makeIdemKey(Long memberId, String subjectCode) {
-        return IDEMPOTENCY_KEY_PREFIX + memberId + ":" + subjectCode;
+        return RedisKeyUtils.idempotencyKey(memberId, subjectCode);
     }
 
 }

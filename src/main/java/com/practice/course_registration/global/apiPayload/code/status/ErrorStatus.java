@@ -39,6 +39,9 @@ public enum ErrorStatus implements BaseErrorCode {
     TOO_MANY_REQUESTS(HttpStatus.BAD_REQUEST, "APPLY4001", "처리중입니다."),
     DUPLICATE_REQUEST(HttpStatus.BAD_REQUEST, "APPLY4002", "동일한 요청이 이미 처리중입니다."),
 
+
+    // lua
+    LUA_LOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "LUA501", "lua 스크립트 로드 실패"),
     ;
 
     private final HttpStatus httpStatus;
