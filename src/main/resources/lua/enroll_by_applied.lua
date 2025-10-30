@@ -25,7 +25,7 @@ end
 redis.call('INCR', KEYS[1])
 redis.call('SADD', KEYS[2], ARGV[1])
 redis.call('SET', KEYS[3], "PENDING")
-redis.call('EXPIRE', KEYS[3], tonumber(ARGV[3])
+redis.call('EXPIRE', KEYS[3], tonumber(ARGV[3]))
 
 return "OK"
 
