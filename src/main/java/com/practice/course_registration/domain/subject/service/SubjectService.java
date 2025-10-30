@@ -31,7 +31,6 @@ public class SubjectService {
     private final IdempotencyService idempotencyService;
 
     private static final int MAX_SCORE = 10;
-    private static final String APPLY_RATE_LIMIT_KEY_PREFIX = "apply:";
     private static final int RATE_LIMIT_CNT = 5;
     private static final int RATE_LIMIT_TTL = 1;
     private static final int IDEM_KEY_TTL = 15;
@@ -47,7 +46,7 @@ public class SubjectService {
      * */
     public void applyCourse(Long memberId, String code) {
         // 입구 제어 (초 당 너무 많은 신청을 보내는지 제어)
-        if (!idempotencyService.rateLimitAllow(APPLY_RATE_LIMIT_KEY_PREFIX + memberId, RATE_LIMIT_CNT, Duration.ofSeconds(RATE_LIMIT_TTL))) {
+        if (!idempotencyService.rateLimitAllow(memberId, RATE_LIMIT_CNT, Duration.ofSeconds(RATE_LIMIT_TTL))) {
             throw new ErrorHandler(ErrorStatus.TOO_MANY_REQUESTS);
         }
 
