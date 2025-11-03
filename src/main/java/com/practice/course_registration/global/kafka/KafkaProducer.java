@@ -61,12 +61,16 @@ public class KafkaProducer {
 
     // Message를 발급하는 과정에서 생긴 오류 핸들링
     private <T> void handleException(Throwable ex, RegistrationMessage message) {
-        if (ex.getCause() instanceof RetriableException){
-            log.warn("Retriable Exception이 발생하였습니다. 자동으로 다시 시도합니다. {}", ex.getMessage());
-        } else if (ex.getCause() instanceof SerializationException){
-            log.error("Serialization 요류입니다. 메시지를 확인하세요. {}", message, ex.getMessage());
+        // cause가 있으면 cause를, 없으면 ex 자체를 확인
+        Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+
+        if (cause instanceof RetriableException){
+            log.warn("Retriable Exception이 발생하였습니다. 자동으로 다시 시도합니다. {}", cause.getMessage());
+        } else if (cause instanceof SerializationException){
+            log.error("Serialization 오류입니다. DLT로 전송합니다. {}", message);
+            sendToDeadLetterTopic(message, targetTopic);
         } else {
-            log.error("{} 메시지를 dead-letter queue로 전송합니다. 에러는 다음과 같습니다. {}", message, ex.getMessage());
+            log.error("{} 메시지를 dead-letter queue로 전송합니다. 에러는 다음과 같습니다. {}", message, cause.getMessage());
             sendToDeadLetterTopic(message, targetTopic);
         }
     }
