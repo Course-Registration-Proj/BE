@@ -10,6 +10,8 @@ import com.practice.course_registration.global.apiPayload.code.status.ErrorStatu
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import com.practice.course_registration.global.redis.repository.LuaRepository;
 import com.practice.course_registration.global.redis.service.IdempotencyService;
+import com.practice.course_registration.global.redis.service.WaitQueueService;
+import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +33,7 @@ public class SubjectService {
     private final MemberRepository memberRepository;
     private final IdempotencyService idempotencyService;
     private final LuaRepository luaRepository;
+    private final WaitQueueService waitQueueService;
 
     private static final int MAX_SCORE = 10;
     private static final int RATE_LIMIT_CNT = 5;
@@ -47,7 +50,8 @@ public class SubjectService {
      * - 과목제한인원이 초과된 경우
      * - 신청가능학점을 넘긴경우
      * */
-    public void applyCourse(Long memberId, String code) {
+
+    public void enqueueCourseRequest(Long memberId, String code) {
         // 입구 제어 (초 당 너무 많은 신청을 보내는지 제어)
         if (!idempotencyService.rateLimitAllow(memberId, RATE_LIMIT_CNT, Duration.ofSeconds(RATE_LIMIT_TTL))) {
             throw new ErrorHandler(ErrorStatus.TOO_MANY_REQUESTS);
@@ -111,30 +115,7 @@ public class SubjectService {
                 default -> throw new IllegalStateException("lua 스크립트 오류 - " + luaResult); // 추후 핸들러로 변경
             }
 
-            int result = subjectRepository.tryIncreaseRegistered(subject.getId());
-
-            if (result == 0) {
-                log.error("제한인원 초과, 제한인원 : " + subject.getLimitedNum() + " , 신청인원 : " + subject.getRegisteredNum());
-                // redis 롤백
-                luaRepository.rollback(subject.getId(), memberId);
-                throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
-            }
-
-            // 신청학점 추가
-            member.addScore(subject.getScore());
-
-            // 저장
-            MemberSubject memberSubject = MemberSubject.builder()
-                    .member(member)
-                    .subject(subject)
-                    .build();
-
-            memberSubjectRepository.save(memberSubject);
-            member.getMemberSubjects().add(memberSubject);
-            subject.getMemberSubjects().add(memberSubject);
-
-            // redis hold key 삭제
-            luaRepository.deleteHoldKeyOnly(subject.getId(), memberId);
+            waitQueueService.enqueueSubject(memberId, subject.getId());
 
         } catch (ErrorHandler e) {
             idempotencyService.releaseIdempotency(memberId, code);

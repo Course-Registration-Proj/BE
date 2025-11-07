@@ -74,7 +74,7 @@ public class SubjectContoller {
 
         Long memberId = SecurityUtils.getUserId();
         try {
-            subjectService.applyCourse(memberId, code);
+            subjectService.enqueueCourseRequest(memberId, code);
             // 원래는 저장해야하지만, Kafka에 메시지를 전송시켜서 apply 기능을 위임함.
 //            kafkaProducer.create(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");
