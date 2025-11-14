@@ -7,6 +7,10 @@ import org.springframework.boot.autoconfigure.cache.CacheProperties.Redis;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+/*
+* @TODO
+*   rate-limit과 멱등키 처리 관련 클래스
+* */
 @Service
 @RequiredArgsConstructor
 public class IdempotencyService {

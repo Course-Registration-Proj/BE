@@ -19,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 
 /*
-* @TODO : 실제 수강신청 기능 (DB에 삽입)
+* @TODO : 대기열에 들어가있는 수강신청 요청들을 실제로 DB에 넣어주는 코드!
+*   🌟 오류가 발생하는 문제의 코드입니다 🌟
 * */
 @Service
 @RequiredArgsConstructor

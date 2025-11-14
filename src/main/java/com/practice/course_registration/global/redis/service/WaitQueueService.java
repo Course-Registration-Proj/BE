@@ -7,6 +7,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+
+/*
+* TODO : 대기열 처리와 관련된 코드를 넣어둔 클래스
+*  대기열에 enqueue, dequeue 하는 코드가 있음
+* */
 @Service
 @RequiredArgsConstructor
 @Slf4j

@@ -12,6 +12,15 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
 
+/*
+* @TODO
+*   loa 스크립트를 사용하기 쉽게 레포지토리화 해놓은 클래스
+*
+*   - holdScript: 수강신청을 원자적으로 처리 (카프카 생각하고 PENDING으로 한건데 아닌가 어차피 대기열 쓰니까 그대로 둬도 되나?)
+*   - rollbackScript: 수강신청 처리 도중 실패로 롤백해야 할 경우 처리
+*   - cancelScript: 수강취소 처리
+*
+* */
 @Repository
 public class LuaRepository {
 
@@ -28,10 +37,12 @@ public class LuaRepository {
     }
 
     public String hold(Long subjectId, Long memberId, int limit, int holdTTL) {
+        // 각 작업을 위해 필요한 key를 생성
         String appliedKey = RedisKeyUtils.courseRestStockKey(subjectId);
         String usersKey = RedisKeyUtils.courseMemberKey(subjectId);
         String holdKey = RedisKeyUtils.reservationKey(subjectId, memberId);
 
+        // lua 스크립트에 필요한 파라미터를 넘기는 작업 (lua 스크립트에 주석으로 써뒀는데 그거에 맞게 인자로 여기서 넣어줍니다)
         return redisTemplate.execute(holdScript, List.of(appliedKey, usersKey, holdKey), String.valueOf(memberId), String.valueOf(limit), String.valueOf(holdTTL));
     }
 

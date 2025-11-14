@@ -1,5 +1,9 @@
 package com.practice.course_registration.global.redis.utils;
 
+/*
+* @TODO : redis key를 좀 더 깔끔하고! 실수 없게 작성하기 위한 util 클래스
+*   추후 필요한 key는 여기서 같은 방식으로 만들어주면 된답니다
+* */
 public class RedisKeyUtils {
 
     private static final String RATE_LIMIT_KEY_PREFIX = "rate:limit:apply:"; // rate limit key
