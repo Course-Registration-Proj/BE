@@ -10,6 +10,7 @@ import com.practice.course_registration.global.apiPayload.code.status.ErrorStatu
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import com.practice.course_registration.global.redis.repository.LuaRepository;
 import com.practice.course_registration.global.redis.service.IdempotencyService;
+import com.practice.course_registration.global.redis.service.ResultCacheService;
 import com.practice.course_registration.global.redis.service.WaitQueueService;
 import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import java.time.Duration;
@@ -23,7 +24,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class SubjectService {
@@ -34,14 +34,16 @@ public class SubjectService {
     private final IdempotencyService idempotencyService;
     private final LuaRepository luaRepository;
     private final WaitQueueService waitQueueService;
+//    private final ResultCacheService resultCacheService;
 
     private static final int MAX_SCORE = 10;
     private static final int RATE_LIMIT_CNT = 5;
     private static final int RATE_LIMIT_TTL = 1;
     private static final int IDEM_KEY_TTL = 15;
     private static final int HOLD_TTL = 120; // 수강신청 성공여부 결정나도 안전망용 ttl
+    private static final int RESULT_CACHE_TTL = 3; // 결과 캐시 TTL
 
-    // 수강신청
+
     /*
      * 예외처리
      * - 이미 신청된 경우
@@ -51,6 +53,9 @@ public class SubjectService {
      * - 신청가능학점을 넘긴경우
      * */
 
+    /*
+    * @TODO : 수강신청 접수 -> 비동기 대기열 삽입
+    * */
     public void enqueueCourseRequest(Long memberId, String code) {
         // 입구 제어 (초 당 너무 많은 신청을 보내는지 제어)
         if (!idempotencyService.rateLimitAllow(memberId, RATE_LIMIT_CNT, Duration.ofSeconds(RATE_LIMIT_TTL))) {
@@ -116,6 +121,7 @@ public class SubjectService {
             }
 
             waitQueueService.enqueueSubject(memberId, subject.getId());
+            log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
 
         } catch (ErrorHandler e) {
             idempotencyService.releaseIdempotency(memberId, code);
@@ -128,6 +134,7 @@ public class SubjectService {
 
 
     // 수강취소
+    @Transactional
     public void cancelCourse(Long memberId, Long subjectId) {
 
         // 멤버 찾기
@@ -157,7 +164,7 @@ public class SubjectService {
 
 
     private Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
+        return memberRepository.findWithSubjectsById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
     }
 
     private Subject findByCode(String code) {

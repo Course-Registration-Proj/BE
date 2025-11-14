@@ -17,6 +17,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
+/*
+* @TODO : 실제 수강신청 기능 (DB에 삽입)
+* */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -35,6 +39,7 @@ public class CourseWorkerService {
     @Scheduled(fixedDelay = 1000)
     public void processWaitingQueue() {
         for (Long subjectId : subjectRepository.findAllIds()) {
+            log.info("스케줄링 작업중 , subjectId : {}", subjectId);
             processCourse(subjectId);
         }
     }
@@ -60,7 +65,7 @@ public class CourseWorkerService {
     // 실제 DB저장
     @Transactional
     public void processEnrollment(Long subjectId, Long memberId) {
-// 멤버 찾기
+        // 멤버 찾기
         Member member = findMemberById(memberId);
 
         // 해당 과목 찾기
