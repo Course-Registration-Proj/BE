@@ -1,6 +1,7 @@
 package com.practice.course_registration.domain.subject.repository;
 
 import com.practice.course_registration.domain.subject.domain.Subject;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -47,4 +48,19 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
         AND s.registeredNum < s.limitedNum
     """)
     int tryDecreaseRegistered(@Param("id") Long subjectId);
+
+
+    @Query("""
+    SELECT s.id
+    FROM Subject s
+    """)
+    List<Long> findAllIds();
+
+    @Modifying
+    @Query("""
+    UPDATE Subject s
+    SET s.registeredNum = s.registeredNum + 1
+    WHERE s.id = :id
+""")
+    int workerIncreaseRegistered(@Param("id") Long subjectId);
 }

@@ -10,18 +10,14 @@ import com.practice.course_registration.global.apiPayload.code.status.ErrorStatu
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import com.practice.course_registration.global.redis.repository.LuaRepository;
 import com.practice.course_registration.global.redis.service.IdempotencyService;
+import com.practice.course_registration.global.redis.service.WaitQueueService;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
-@Transactional
 @RequiredArgsConstructor
 @Slf4j
 public class SubjectService {
@@ -29,25 +25,30 @@ public class SubjectService {
     private final SubjectRepository subjectRepository;
     private final MemberSubjectRepository memberSubjectRepository;
     private final MemberRepository memberRepository;
+
     private final IdempotencyService idempotencyService;
     private final LuaRepository luaRepository;
+    private final WaitQueueService waitQueueService;
+
 
     private static final int MAX_SCORE = 10;
     private static final int RATE_LIMIT_CNT = 5;
     private static final int RATE_LIMIT_TTL = 1;
     private static final int IDEM_KEY_TTL = 15;
     private static final int HOLD_TTL = 120; // 수강신청 성공여부 결정나도 안전망용 ttl
+    private static final int RESULT_CACHE_TTL = 3; // 결과 캐시 TTL
 
-    // 수강신청
+
+
     /*
-     * 예외처리
-     * - 이미 신청된 경우
-     * - 신청한 과목과 같은 시간의 과목인 경우
-     * - 과목코드가 같은 경우
-     * - 과목제한인원이 초과된 경우
-     * - 신청가능학점을 넘긴경우
-     * */
-    public void applyCourse(Long memberId, String code) {
+    * @TODO : 수강신청 접수 -> 대기열 삽입
+    *   - 실제 수강신청이 완료되지는 않고 수강신청을 위해 대기열에 요청을 넣는 코드
+    *   - rate limit으로 입구 제어 구현
+    *   - 멱등키를 통해 중복클릭 방지 (SSR이라 백엔드에서 직접 처리)
+    *   - LUA 스크립트를 통해서 원자적 처리 구현 (LUA를 선점하면 원자적으로 수강 신청 가능, 물론 redis에 적용, DB에는 미적용)
+    *   - 대기열에 넣어줌
+    * */
+    public void enqueueCourseRequest(Long memberId, String code) {
         // 입구 제어 (초 당 너무 많은 신청을 보내는지 제어)
         if (!idempotencyService.rateLimitAllow(memberId, RATE_LIMIT_CNT, Duration.ofSeconds(RATE_LIMIT_TTL))) {
             throw new ErrorHandler(ErrorStatus.TOO_MANY_REQUESTS);
@@ -67,40 +68,8 @@ public class SubjectService {
             // 해당 과목 찾기
             Subject subject = findByCode(code);
 
-            if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
-                throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
-            }
-
-            if (member.getRegisteredScore() + subject.getScore() > MAX_SCORE) {
-                throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
-            }
-
-            boolean conflict = member.getMemberSubjects().stream()
-                    .map(MemberSubject::getSubject)
-                    .filter(subj ->
-                            subj.getSubjectDay() == subject.getSubjectDay()
-                    )
-                    .anyMatch(subj -> subj.conflictCheck(subject))
-                    ;
-
-            int isSameCode = member.getMemberSubjects().stream()
-                    .map(MemberSubject::getSubject)
-                    .filter(subj ->
-                            subj.getCode().equals(subject.getCode())
-                    )
-                    .toList()
-                    .size()
-                    ;
-
-            if (conflict) {
-                log.error("시간 충돌");
-                throw new ErrorHandler(ErrorStatus.CONFLICT_COURSE_TIME);
-            }
-
-            if (isSameCode != 0) {
-                log.error("이미 신청한 과목");
-                throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
-            }
+            // 유효성 검사
+            validateCheck(member, subject);
 
             // 원자성 추가
             String luaResult = luaRepository.hold(subject.getId(), memberId, subject.getLimitedNum(), HOLD_TTL);
@@ -111,30 +80,8 @@ public class SubjectService {
                 default -> throw new IllegalStateException("lua 스크립트 오류 - " + luaResult); // 추후 핸들러로 변경
             }
 
-            int result = subjectRepository.tryIncreaseRegistered(subject.getId());
-
-            if (result == 0) {
-                log.error("제한인원 초과, 제한인원 : " + subject.getLimitedNum() + " , 신청인원 : " + subject.getRegisteredNum());
-                // redis 롤백
-                luaRepository.rollback(subject.getId(), memberId);
-                throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
-            }
-
-            // 신청학점 추가
-            member.addScore(subject.getScore());
-
-            // 저장
-            MemberSubject memberSubject = MemberSubject.builder()
-                    .member(member)
-                    .subject(subject)
-                    .build();
-
-            memberSubjectRepository.save(memberSubject);
-            member.getMemberSubjects().add(memberSubject);
-            subject.getMemberSubjects().add(memberSubject);
-
-            // redis hold key 삭제
-            luaRepository.deleteHoldKeyOnly(subject.getId(), memberId);
+            waitQueueService.enqueueSubject(memberId, subject.getId());
+            log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
 
         } catch (ErrorHandler e) {
             idempotencyService.releaseIdempotency(memberId, code);
@@ -145,8 +92,54 @@ public class SubjectService {
         }
     }
 
+    /**
+     * @TODO : 유효성 검사
+     * - 이미 신청된 경우
+     * - 신청한 과목과 같은 시간의 과목인 경우
+     * - 과목코드가 같은 경우
+     * - 과목제한인원이 초과된 경우 -> 위 코드에서 lua 결과로 판단
+     * - 신청가능학점을 넘긴경우 -> 위 코드에서 lua 결과로 판단
+     * */
+    private void validateCheck(Member member, Subject subject) {
+        if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
+            throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
+        }
+
+        if (member.getRegisteredScore() + subject.getScore() > MAX_SCORE) {
+            throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
+        }
+
+        boolean conflict = member.getMemberSubjects().stream()
+                .map(MemberSubject::getSubject)
+                .filter(subj ->
+                        subj.getSubjectDay() == subject.getSubjectDay()
+                )
+                .anyMatch(subj -> subj.conflictCheck(subject))
+                ;
+
+        int isSameCode = member.getMemberSubjects().stream()
+                .map(MemberSubject::getSubject)
+                .filter(subj ->
+                        subj.getCode().equals(subject.getCode())
+                )
+                .toList()
+                .size()
+                ;
+
+        if (conflict) {
+            log.error("시간 충돌");
+            throw new ErrorHandler(ErrorStatus.CONFLICT_COURSE_TIME);
+        }
+
+        if (isSameCode != 0) {
+            log.error("이미 신청한 과목");
+            throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
+        }
+    }
+
 
     // 수강취소
+    @Transactional
     public void cancelCourse(Long memberId, Long subjectId) {
 
         // 멤버 찾기
@@ -176,7 +169,7 @@ public class SubjectService {
 
 
     private Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
+        return memberRepository.findWithSubjectsById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
     }
 
     private Subject findByCode(String code) {

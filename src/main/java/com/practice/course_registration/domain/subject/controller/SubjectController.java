@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/courses")
 @Validated
-public class SubjectContoller {
+public class SubjectController {
 
     private final SubjectQueryService subjectQueryService;
     private final KafkaProducer kafkaProducer;
@@ -74,10 +74,10 @@ public class SubjectContoller {
 
         Long memberId = SecurityUtils.getUserId();
         try {
-            subjectService.applyCourse(memberId, code);
+            subjectService.enqueueCourseRequest(memberId, code);
             // 원래는 저장해야하지만, Kafka에 메시지를 전송시켜서 apply 기능을 위임함.
 //            kafkaProducer.create(memberId, code);
-            redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");
+            redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 접수됐습니다");
         } catch (ErrorHandler e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getErrorReason().getMessage());
         }

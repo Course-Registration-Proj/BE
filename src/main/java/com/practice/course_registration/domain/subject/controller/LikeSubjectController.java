@@ -73,7 +73,7 @@ public class LikeSubjectController {
 
         Long memberId = SecurityUtils.getUserId();
         try {
-            subjectService.applyCourse(memberId, code);
+            subjectService.enqueueCourseRequest(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");
         } catch (ErrorHandler e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
