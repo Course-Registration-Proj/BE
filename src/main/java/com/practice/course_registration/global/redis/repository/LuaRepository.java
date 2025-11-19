@@ -11,6 +11,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.FileCopyUtils;
 
 /*
 * @TODO
@@ -70,7 +71,10 @@ public class LuaRepository {
 
     private <T> DefaultRedisScript<T> script(String path, Class<T> type) {
         try {
-            var txt = Files.readString(new ClassPathResource(path).getFile().toPath(), StandardCharsets.UTF_8);
+            ClassPathResource resource = new ClassPathResource(path);
+            byte[] binaryData = FileCopyUtils.copyToByteArray(resource.getInputStream());
+            String txt = new String(binaryData, StandardCharsets.UTF_8);
+
             var s = new DefaultRedisScript<T>();
             s.setScriptText(txt);
             s.setResultType(type);
