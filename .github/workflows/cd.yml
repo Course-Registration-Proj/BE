@@ -54,10 +54,9 @@ jobs:
             export DB_USERNAME=${{ secrets.DB_USERNAME }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
 
-            # 이미지 최신화 및 컨테이너 재시작
-            sudo -E docker-compose -f docker-compose.prod.yml pull
-            sudo -E docker-compose -f docker-compose.prod.yml down
-            sudo -E docker-compose -f docker-compose.prod.yml up -d --remove-orphans
+            # spring boot 이미지 최신화 및 업데이트
+            sudo -E docker-compose -f docker-compose.prod.yml pull app  
+            sudo -E docker-compose -f docker-compose.prod.yml up -d --no-deps app
 
             # 필요 없는 이미지 정리
             sudo docker image prune -f

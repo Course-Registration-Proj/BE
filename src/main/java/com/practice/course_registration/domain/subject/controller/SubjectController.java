@@ -30,7 +30,6 @@ import java.util.List;
 public class SubjectController {
 
     private final SubjectQueryService subjectQueryService;
-    private final KafkaProducer kafkaProducer;
     private final SubjectService subjectService;
 
 
