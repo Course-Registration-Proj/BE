@@ -28,12 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class CourseWorkerService {
 
     private final SubjectRepository subjectRepository;
-    private final MemberSubjectRepository memberSubjectRepository;
     private final MemberRepository memberRepository;
     private final LuaRepository luaRepository;
     private final WaitQueueService waitQueueService;
-
-    private static final int MAX_SCORE = 10;
+    private final CourseEnrollmentService courseEnrollmentService;
 
 
     // 1초마다 모든 과목 큐 확인하고 처리, Spring 스케줄러기능
@@ -53,7 +51,7 @@ public class CourseWorkerService {
             Long memberId = Long.valueOf(memberIdStr);
 
             try {
-                processEnrollment(subjectId, memberId);
+                courseEnrollmentService.processEnrollment(subjectId, memberId);
                 log.info("수강신청 DB 저장 성공. Course: {}, Member: {}", subjectId, memberId);
             } catch (Exception e) {
                 // redis 롤백
@@ -63,74 +61,6 @@ public class CourseWorkerService {
         }
     }
 
-    // 실제 DB저장
-    @Transactional
-    public void processEnrollment(Long subjectId, Long memberId) {
-        // 멤버 찾기
-        Member member = findMemberById(memberId);
-
-        // 해당 과목 찾기
-        Subject subject = findSubjectById(subjectId);
-
-        if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
-            throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
-        }
-
-        if (member.getRegisteredScore() + subject.getScore() > MAX_SCORE) {
-            throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
-        }
-
-        int isSameCode = member.getMemberSubjects().stream()
-                .map(MemberSubject::getSubject)
-                .filter(subj ->
-                        subj.getCode().equals(subject.getCode())
-                )
-                .toList()
-                .size()
-        ;
-
-        if (isSameCode != 0) {
-            log.error("이미 신청한 과목");
-            throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
-        }
-
-        boolean conflict = member.getMemberSubjects().stream()
-                .map(MemberSubject::getSubject)
-                .filter(subj ->
-                        subj.getSubjectDay() == subject.getSubjectDay()
-                )
-                .anyMatch(subj -> subj.conflictCheck(subject))
-                ;
-
-        if (conflict) {
-            log.error("시간 충돌");
-            throw new ErrorHandler(ErrorStatus.CONFLICT_COURSE_TIME);
-        }
-
-        int result = subjectRepository.workerIncreaseRegistered(subject.getId());
-
-        if (result != 1) {
-            log.error("DB 정합성 문제 발생: result=" + result);
-            throw new ErrorHandler(ErrorStatus.ENROLL_FAILED);
-        }
-
-        // 신청학점 추가
-        member.addScore(subject.getScore());
-
-        // 저장
-        MemberSubject memberSubject = MemberSubject.builder()
-                .member(member)
-                .subject(subject)
-                .build();
-
-        memberSubjectRepository.save(memberSubject);
-        member.getMemberSubjects().add(memberSubject);
-        subject.getMemberSubjects().add(memberSubject);
-
-        // redis hold key 삭제
-        luaRepository.deleteHoldKeyOnly(subject.getId(), memberId);
-
-    }
 
     private Member findMemberById(Long memberId) {
         return memberRepository.findById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
