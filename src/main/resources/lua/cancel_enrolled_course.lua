@@ -11,7 +11,7 @@ end
 local curStr = redis.call('GET', KEYS[1])
 local cur = tonumber(curStr or "0")
 if cur > 0 then
-    redis.call('DECR', KEYS[1])
+    local newCount = redis.call('DECR', KEYS[1])
 
     if newCount <= 0 then
         redis.call('DEL', KEYS[1])

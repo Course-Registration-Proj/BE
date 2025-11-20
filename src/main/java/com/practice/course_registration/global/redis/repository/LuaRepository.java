@@ -72,9 +72,8 @@ public class LuaRepository {
     private <T> DefaultRedisScript<T> script(String path, Class<T> type) {
         try {
             ClassPathResource resource = new ClassPathResource(path);
-            byte[] binaryData = FileCopyUtils.copyToByteArray(resource.getInputStream());
+            byte[] binaryData =  FileCopyUtils.copyToByteArray(resource.getInputStream());
             String txt = new String(binaryData, StandardCharsets.UTF_8);
-
             var s = new DefaultRedisScript<T>();
             s.setScriptText(txt);
             s.setResultType(type);
