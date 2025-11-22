@@ -19,21 +19,37 @@ public class WaitQueueService {
 
     private final StringRedisTemplate redisTemplate;
 
+    // 전역 대기열에 요청 삽입
+    public void enqueueGlobal(Long memberId, Long subjectId, long nowMillis) {
+        String queueKey = RedisKeyUtils.globalApplyQueueKey();
+        String value = memberId + ":" + subjectId; // payload
+        redisTemplate.opsForZSet().add(queueKey, value, nowMillis);
 
-    // 대기열에 요청 삽입
-    public void enqueueSubject(Long memberId, Long subjectId) {
-        // 대기열에 요청 적재
-        String queueKey = RedisKeyUtils.courseWaitingKey(subjectId);
-
-        // redis list에 적재 (key, value)
-        Long resultId = redisTemplate.opsForList().rightPush(queueKey, String.valueOf(memberId));
-
-        log.info("수강신청 접수 성공 - memberId={}, subjectId={}, 대기열크기={}", memberId, subjectId, resultId);
+        Long size = redisTemplate.opsForZSet().size(queueKey);
+        log.info("대기열 등록: {}, queueSize={}", value, size);
     }
 
-    // 대기열에서 요청 꺼내기
-    public String dequeueSubject(Long subjectId, Duration ttl) {
-        String queueKey = RedisKeyUtils.courseWaitingKey(subjectId);
-        return redisTemplate.opsForList().leftPop(queueKey, ttl);
+    // 사용자에게 보여줄 대기열 순번 조회
+    public Long getQueuePosition(Long memberId, Long subjectId) {
+        String queueKey = RedisKeyUtils.globalApplyQueueKey();
+        String value = memberId + ":" + subjectId;
+        Long rank = redisTemplate.opsForZSet().rank(queueKey, value);
+        return rank == null ? null : (rank + 1);
     }
+
+    // 토큰 발급
+    public void issueToken(Long memberId, Long subjectId, Duration ttl) {
+        String tokenKey = RedisKeyUtils.applyTokenKey(memberId);
+        redisTemplate.opsForValue().set(tokenKey, String.valueOf(subjectId), ttl);
+    }
+
+    /* 토큰 확인 & 소비 */
+    public boolean consumeToken(Long memberId) {
+        String tokenKey = RedisKeyUtils.applyTokenKey(memberId);
+        String subjectId = redisTemplate.opsForValue().get(tokenKey);
+        if (subjectId == null) return false;
+        redisTemplate.delete(tokenKey); // 일회성
+        return true;
+    }
+
 }

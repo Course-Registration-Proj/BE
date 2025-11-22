@@ -47,4 +47,11 @@ public class RedisKeyUtils {
         return COURSE_PREFIX + courseId + ":result:" + memberId;
     }
 
+    public static String globalApplyQueueKey() { // 전역 대기열 (ZSET)
+        return "apply:queue";
+    }
+    public static String applyTokenKey(Long memberId) { // 토큰 키 (String)
+        return "apply:token:" + memberId;
+    }
+
 }
