@@ -36,16 +36,6 @@ public class RedisKeyUtils {
         return RESERVATION_PREFIX + courseId + ":" + memberId;
     }
 
-    // 과목별 대기열
-    public static String courseWaitingKey(Long courseId) {
-        return COURSE_PREFIX + courseId + ":wait";
-    }
-
-
-    // 신청 결과 키 (캐시용)
-    public static String couseResultKey(Long memberId, Long courseId) {
-        return COURSE_PREFIX + courseId + ":result:" + memberId;
-    }
 
     public static String globalApplyQueueKey() { // 전역 대기열 (ZSET)
         return "apply:queue";

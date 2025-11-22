@@ -37,12 +37,6 @@ public class WaitQueueService {
         return rank == null ? null : (rank + 1);
     }
 
-    // 토큰 발급
-    public void issueToken(Long memberId, Long subjectId, Duration ttl) {
-        String tokenKey = RedisKeyUtils.applyTokenKey(memberId);
-        redisTemplate.opsForValue().set(tokenKey, String.valueOf(subjectId), ttl);
-    }
-
     // 토큰 존재 여부(값은 subjectId)
     public String peekToken(Long memberId) {
         String key = RedisKeyUtils.applyTokenKey(memberId);

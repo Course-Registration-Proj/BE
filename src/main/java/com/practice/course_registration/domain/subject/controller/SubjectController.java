@@ -86,16 +86,15 @@ public class SubjectController {
         return "redirect:/courses/search";
     }
 
-    // 대기 페이지(SSR)
+    // 대기 페이지
     @GetMapping("/apply/wait")
     public String waitPage(@RequestParam String code, Model model) {
         Long memberId = SecurityUtils.getUserId();
         WaitPositionDTO dto = subjectService.getWaitPosition(memberId, code);
 
         model.addAttribute("code", code);
-        model.addAttribute("position", dto.getPosition()); // null이면 이미 토큰 발급/소비됐을 가능성
+        model.addAttribute("position", dto.getPosition());
 
-        // 이 뷰에서 meta refresh로 /courses/apply/try 호출
         return "courses/apply-wait";
     }
 
