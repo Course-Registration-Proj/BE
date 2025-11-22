@@ -4,6 +4,7 @@ import com.practice.course_registration.domain.member.domain.Member;
 import com.practice.course_registration.domain.member.repository.MemberRepository;
 import com.practice.course_registration.domain.subject.domain.MemberSubject;
 import com.practice.course_registration.domain.subject.domain.Subject;
+import com.practice.course_registration.domain.subject.dto.WaitPositionDTO;
 import com.practice.course_registration.domain.subject.repository.MemberSubjectRepository;
 import com.practice.course_registration.domain.subject.repository.SubjectRepository;
 import com.practice.course_registration.global.apiPayload.code.status.ErrorStatus;
@@ -72,25 +73,62 @@ public class SubjectService {
             validateCheck(member, subject);
 
             // 원자성 추가
-            String luaResult = luaRepository.hold(subject.getId(), memberId, subject.getLimitedNum(), HOLD_TTL);
-            switch (luaResult) {
-                case "OK" -> held = true;
-                case "ALREADY_ENROLLED" -> throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
-                case "CAPACITY_FULL" -> throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
-                default -> throw new IllegalStateException("lua 스크립트 오류 - " + luaResult); // 추후 핸들러로 변경
-            }
-
-            waitQueueService.enqueueSubject(memberId, subject.getId());
+            waitQueueService.enqueueGlobal(memberId, subject.getId(), System.currentTimeMillis());
             log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
 
         } catch (ErrorHandler e) {
             idempotencyService.releaseIdempotency(memberId, code);
             throw e;
         }
-        finally {
-            idempotencyService.releaseIdempotency(memberId, code);
-        }
     }
+
+    /*
+    * @TODO : 토큰 기반 실제 신청
+    * */
+
+    public void applyCourseWithToken(Long memberId, String code) {
+        // 멤버 찾기
+        Member member = findMemberById(memberId);
+
+        // 해당 과목 찾기
+        Subject subject = findByCode(code);
+
+        // 유효성 검사
+        validateCheck(member, subject);
+
+        if (!waitQueueService.consumeToken(memberId, subject.getId())) {
+            throw new ErrorHandler(ErrorStatus.UNAUTHORIZED_ISSUE_TOKEN);
+        }
+
+        // Redis 원자 선점(FCFS)
+        String luaResult = luaRepository.hold(subject.getId(), memberId, subject.getLimitedNum(), HOLD_TTL);
+        switch (luaResult) {
+            case "OK" -> {
+                int updated = subjectRepository.tryIncreaseRegistered(subject.getId());
+                if (updated == 0) {
+                    luaRepository.rollback(subject.getId(), memberId);
+                    throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
+                }
+
+                MemberSubject memberSubject = MemberSubject.builder()
+                        .member(member)
+                        .subject(subject)
+                        .build()
+                ;
+                memberSubjectRepository.save(memberSubject);
+                member.getMemberSubjects().add(memberSubject);
+                subject.getMemberSubjects().add(memberSubject);
+                member.addScore(subject.getScore());
+
+                luaRepository.deleteHoldKeyOnly(subject.getId(), memberId); // hold 정리
+            }
+            case "ALREADY_ENROLLED" -> throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
+            case "CAPACITY_FULL"    -> throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
+            default -> throw new IllegalStateException("lua 오류 - " + luaResult);
+        }
+
+    }
+
 
     /**
      * @TODO : 유효성 검사
@@ -137,6 +175,15 @@ public class SubjectService {
         }
     }
 
+    public WaitPositionDTO getWaitPosition(Long memberId, String code) {
+        Long subjectId = findByCode(code).getId();
+        Long position = waitQueueService.getQueuePosition(memberId, subjectId);
+        return WaitPositionDTO.builder()
+                .subjectId(subjectId)
+                .position(position)
+                .build();
+    }
+
 
     // 수강취소
     @Transactional
@@ -176,5 +223,4 @@ public class SubjectService {
         return subjectRepository.findByCode(code)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.SUBJECT_NOT_FOUND));
     }
-
 }

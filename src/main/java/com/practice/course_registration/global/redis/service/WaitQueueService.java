@@ -43,11 +43,18 @@ public class WaitQueueService {
         redisTemplate.opsForValue().set(tokenKey, String.valueOf(subjectId), ttl);
     }
 
+    // 토큰 존재 여부(값은 subjectId)
+    public String peekToken(Long memberId) {
+        String key = RedisKeyUtils.applyTokenKey(memberId);
+        return redisTemplate.opsForValue().get(key);
+    }
+
     /* 토큰 확인 & 소비 */
-    public boolean consumeToken(Long memberId) {
+    public boolean consumeToken(Long memberId, Long subjectId) {
         String tokenKey = RedisKeyUtils.applyTokenKey(memberId);
-        String subjectId = redisTemplate.opsForValue().get(tokenKey);
-        if (subjectId == null) return false;
+        String redisSubjectId = redisTemplate.opsForValue().get(tokenKey);
+        if (redisSubjectId == null) return false;
+        if (!redisSubjectId.equals(String.valueOf(subjectId))) return false;
         redisTemplate.delete(tokenKey); // 일회성
         return true;
     }
