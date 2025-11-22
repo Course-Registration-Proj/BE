@@ -86,6 +86,7 @@ public class SubjectService {
     * @TODO : 토큰 기반 실제 신청
     * */
 
+    @Transactional
     public void applyCourseWithToken(Long memberId, String code) {
         // 멤버 찾기
         Member member = findMemberById(memberId);
