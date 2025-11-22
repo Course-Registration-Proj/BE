@@ -2,10 +2,12 @@ package com.practice.course_registration.domain.subject.controller;
 
 import com.practice.course_registration.domain.subject.dto.CourseFilterRequestDTO;
 import com.practice.course_registration.domain.subject.dto.SubjectResponseDTO;
+import com.practice.course_registration.domain.subject.dto.WaitPositionDTO;
 import com.practice.course_registration.domain.subject.service.SubjectQueryService;
 import com.practice.course_registration.domain.subject.service.SubjectService;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import com.practice.course_registration.global.kafka.KafkaProducer;
+import com.practice.course_registration.global.redis.service.WaitQueueService;
 import com.practice.course_registration.global.security.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -31,6 +33,7 @@ public class SubjectController {
 
     private final SubjectQueryService subjectQueryService;
     private final SubjectService subjectService;
+    private final WaitQueueService waitQueueService;
 
 
     /*
@@ -74,13 +77,45 @@ public class SubjectController {
         Long memberId = SecurityUtils.getUserId();
         try {
             subjectService.enqueueCourseRequest(memberId, code);
-            // 원래는 저장해야하지만, Kafka에 메시지를 전송시켜서 apply 기능을 위임함.
-//            kafkaProducer.create(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 접수됐습니다");
+            return "redirect:/courses/apply/wait?code=" + code;
         } catch (ErrorHandler e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getErrorReason().getMessage());
         }
 
         return "redirect:/courses/search";
+    }
+
+    // 대기 페이지
+    @GetMapping("/apply/wait")
+    public String waitPage(@RequestParam String code, Model model) {
+        Long memberId = SecurityUtils.getUserId();
+        WaitPositionDTO dto = subjectService.getWaitPosition(memberId, code);
+
+        model.addAttribute("code", code);
+        model.addAttribute("position", dto.getPosition());
+
+        return "courses/apply-wait";
+    }
+
+
+    @GetMapping("/apply/try")
+    public String tryApply(@RequestParam String code, RedirectAttributes ra) {
+        Long memberId = SecurityUtils.getUserId();
+        try {
+            // 토큰 존재하면 확정 처리
+            String tokenVal = waitQueueService.peekToken(memberId);
+            if (tokenVal != null) {
+                subjectService.applyCourseWithToken(memberId, code);
+                ra.addFlashAttribute("message", "수강신청이 완료되었습니다.");
+                return "redirect:/courses/search";
+            }
+            // 토큰이 아직 없으면 대기 페이지로
+            return "redirect:/courses/apply/wait?code=" + code;
+
+        } catch (ErrorHandler e) {
+            ra.addFlashAttribute("errorMessage", e.getErrorReason().getMessage());
+            return "redirect:/courses/search";
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.Collections;
 import java.util.List;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -29,12 +30,14 @@ public class LuaRepository {
     private final DefaultRedisScript<String> holdScript;
     private final DefaultRedisScript<String> rollbackScript;
     private final DefaultRedisScript<String> cancelScript;
+    private final DefaultRedisScript<Long> issueTokensScript;
 
     public LuaRepository(StringRedisTemplate template) {
         this.redisTemplate = template;
         this.holdScript = script("lua/enroll_by_applied.lua", String.class);
         this.rollbackScript = script("lua/rollback_by_applied.lua", String.class);
         this.cancelScript = script("lua/cancel_enrolled_course.lua", String.class);
+        this.issueTokensScript = script("lua/publish_issue_token.lua", Long.class);
     }
 
     public String hold(Long subjectId, Long memberId, int limit, int holdTTL) {
@@ -45,6 +48,19 @@ public class LuaRepository {
 
         // lua 스크립트에 필요한 파라미터를 넘기는 작업 (lua 스크립트에 주석으로 써뒀는데 그거에 맞게 인자로 여기서 넣어줍니다)
         return redisTemplate.execute(holdScript, List.of(appliedKey, usersKey, holdKey), String.valueOf(memberId), String.valueOf(limit), String.valueOf(holdTTL));
+    }
+
+    public Long publishIssueTokens(int permits, int tokenTtlSeconds) {
+        String queueKey = RedisKeyUtils.globalApplyQueueKey();
+        Long cnt = redisTemplate.execute(
+                issueTokensScript,
+                List.of(queueKey),
+                String.valueOf(permits),
+                "apply:token:",
+                String.valueOf(tokenTtlSeconds)
+        );
+
+        return cnt == null ? 0L : cnt;
     }
 
     public String rollback(Long subjectId, Long memberId) {

@@ -1,0 +1,20 @@
+<!--테스트용 임시방편-->
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <!-- 1초마다 /apply/try로 이동 -->
+    <meta http-equiv="refresh" th:content="'1;url=/courses/apply/try?code=' + ${code}"/>
+    <title>수강신청 대기 중</title>
+</head>
+<body>
+<h2>수강신청 대기 중</h2>
+<p th:if="${position != null}">
+    현재 순번: <b th:text="${position}">...</b>
+</p>
+<p th:if="${position == null}">
+    대기열에서 처리 중입니다. 잠시만 기다려 주세요.
+</p>
+</body>
+</html>

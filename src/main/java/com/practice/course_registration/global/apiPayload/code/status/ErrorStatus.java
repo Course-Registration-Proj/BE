@@ -38,6 +38,7 @@ public enum ErrorStatus implements BaseErrorCode {
     // apply (수강신청 관련)
     TOO_MANY_REQUESTS(HttpStatus.BAD_REQUEST, "APPLY4001", "처리중입니다."),
     DUPLICATE_REQUEST(HttpStatus.BAD_REQUEST, "APPLY4002", "동일한 요청이 이미 처리중입니다."),
+    UNAUTHORIZED_ISSUE_TOKEN(HttpStatus.UNAUTHORIZED, "APPLY4003", "issue token 검증에 실패했습니다."),
     ENROLL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "APPLY5001", "수강신청 DB저장 실패"),
 
 
