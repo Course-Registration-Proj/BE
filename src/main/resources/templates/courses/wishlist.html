@@ -2,17 +2,51 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <title>희망수업 - 수강신청</title>
     <style>
         /* 기존 스타일을 복사 */
         body{font-family:system-ui,Roboto,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;margin:20px;color:#1f2937}
         h1{margin:0 0 16px;font-size:22px}
-        table{width:100%;border-collapse:collapse;margin-top:10px}
-        th,td{border:1px solid #e5e7eb;padding:10px;text-align:center;font-size:14px}
+        table{width:100%;border-collapse:collapse;margin-top:10px;table-layout: fixed;}
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            vertical-align: middle;
+        }
         th{background:#f9fafb;color:#6b7280}
-        .btn{display:inline-block;height:30px;line-height:28px;padding:0 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
-        .btn-blue{border-color:#2563eb;background:#2563eb;color:#fff}
-        .btn-ghost{background:#fff}
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 110px;
+            height: 36px;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .btn-blue {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: #fff;
+            color: #374151;
+        }
+        td form {
+            display: inline-block;
+            margin: 0;
+            text-align: center;
+        }
         .pagination{margin-top:16px;text-align:center}
         .pagination a,.pagination span{display:inline-block;margin:0 4px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#374151}
         .pagination .active{background:#eef2ff;border-color:#c7d2fe;font-weight:700}
@@ -24,6 +58,41 @@
         .tabs a:hover{background:#f9fafb}
         .tabs a.active{background:#fff;border-color:#e5e7eb;border-bottom:1px solid #fff;
             font-weight:700}
+        #queueModal {
+            display: none; /* 평소에는 숨김 */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5); /* 배경 어둡게 */
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto; /* 화면 중앙 배치 */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+        /* Added styling to center the modal button */
+        .modal-content button {
+            margin: 10px auto 0;
+            display: block;
+        }
+        /* Removed flexbox from td and added text-align center */
+        td:first-child,
+        td:nth-child(2) {
+            text-align: center;
+        }
+        td:first-child form,
+        td:nth-child(2) form {
+            display: inline-block;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -59,14 +128,17 @@
     <tbody>
     <tr th:each="likeSubject : ${likeSubjectPage.content}">
         <td>
-            <form th:if="${!likeSubject.isRegistered}" th:action="@{/apply}" method="post" style="display: inline;">
-                <input type="hidden" name="code" th:value="${likeSubject.code}" />
-                <button type="submit" class="btn btn-blue">수강신청</button>
-            </form>
+            <button th:if="${!likeSubject.isRegistered}"
+                    class="btn btn-blue"
+                    type="button"
+                    th:attr="data-code=${likeSubject.code}"
+                    onclick="startApplication(this.dataset.code)">
+                수강신청
+            </button>
             <span th:if="${likeSubject.isRegistered}" style="color:gray;">신청완료</span>
         </td>
         <td>
-            <form th:action="@{/remove-wish}" method="post" style="display: inline;">
+            <form th:action="@{/remove-wish}" method="post">
                 <input type="hidden" name="code" th:value="${likeSubject.code}" />
                 <button type="submit" class="btn btn-ghost"
                         onclick="return confirm('희망과목에서 삭제하시겠습니까?')">삭제</button>
@@ -80,6 +152,14 @@
     </tr>
     </tbody>
 </table>
+
+<div id="queueModal">
+    <div class="modal-content">
+        <h3>⏳ 수강신청 대기 중</h3>
+        <p id="modalMessage">잠시만 기다려주세요...</p>
+        <p id="positionCount" style="font-size:30px; font-weight:bold; color:#2563eb;">-</p>
+    </div>
+</div>
 
 <!-- 희망과목이 없을 때 -->
 <div th:if="${likeSubjectPage == null or likeSubjectPage.empty}">
@@ -113,5 +193,80 @@
     alert([[${errorMessage}]]);
 </script>
 
+<script th:inline="javascript">
+
+    const csrfToken = document.querySelector("meta[name='_csrf']")?.getAttribute("content");
+    const csrfHeader = document.querySelector("meta[name='_csrf_header']")?.getAttribute("content");
+
+    let pollingInterval = null;
+    const modal = document.getElementById('queueModal');
+    const msgElem = document.getElementById('modalMessage');
+    const countElem = document.getElementById('positionCount');
+    function startApplication(code) {
+        if(!confirm("수강신청 하시겠습니까?")) return;
+
+        modal.style.display = "block";
+        msgElem.innerText = "대기열 진입 중...";
+        countElem.innerText = "-";
+
+        fetch('/courses/apply', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [csrfHeader]: csrfToken
+            },
+            body: new URLSearchParams({ code: code })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'WAITING') {
+                    pollStatus(code);
+                } else {
+                    alert(data.message);
+                    closeModal();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("오류 발생");
+                closeModal();
+            });
+    }
+
+    function pollStatus(code) {
+        pollingInterval = setInterval(() => {
+            fetch('/courses/apply/try?code=' + code)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'WAITING') {
+                        msgElem.innerText = "현재 대기 순번";
+                        if (data.position !== null && data.position !== undefined) {
+                            countElem.innerText = data.position + "명";
+                        } else {
+                            countElem.innerText = "집계 중...";
+                        }
+                    } else if (data.status === 'SUCCESS') {
+                        clearInterval(pollingInterval);
+                        alert(data.message);
+                        closeModal();
+                        location.reload();
+                    } else {
+                        clearInterval(pollingInterval);
+                        alert("실패: " + data.message);
+                        closeModal();
+                    }
+                })
+                .catch(err => console.error("통신 에러:", err));
+        }, 1000);
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    }
+</script>
 </body>
 </html>

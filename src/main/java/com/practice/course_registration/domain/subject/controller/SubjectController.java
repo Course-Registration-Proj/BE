@@ -14,16 +14,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -71,19 +71,26 @@ public class SubjectController {
 
     // 수강신청
     @PostMapping("/apply")
-    public String applyCourse(@RequestParam String code,
-                              RedirectAttributes redirectAttributes) {
-
+    @ResponseBody // 뷰가 아닌 데이터를 반환
+    public ResponseEntity<Map<String, Object>> applyCourse(@RequestParam String code) {
         Long memberId = SecurityUtils.getUserId();
-        try {
-            subjectService.enqueueCourseRequest(memberId, code);
-            redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 접수됐습니다");
-            return "redirect:/courses/apply/wait?code=" + code;
-        } catch (ErrorHandler e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getErrorReason().getMessage());
-        }
+        Map<String, Object> response = new HashMap<>();
 
-        return "redirect:/courses/search";
+        try {
+            // 대기열 등록
+            subjectService.enqueueCourseRequest(memberId, code);
+
+            // 성공 시 JSON 응답
+            response.put("status", "WAITING");
+            response.put("message", "대기열에 진입했습니다.");
+            return ResponseEntity.ok(response);
+
+        } catch (ErrorHandler e) {
+            // 에러 시 JSON 응답
+            response.put("status", "FAIL");
+            response.put("message", e.getErrorReason().getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     // 대기 페이지
@@ -100,22 +107,35 @@ public class SubjectController {
 
 
     @GetMapping("/apply/try")
-    public String tryApply(@RequestParam String code, RedirectAttributes ra) {
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> tryApply(@RequestParam String code) {
         Long memberId = SecurityUtils.getUserId();
+        Map<String, Object> response = new HashMap<>();
+
         try {
-            // 토큰 존재하면 확정 처리
+            // 1. 내 차례(토큰)가 왔는지 확인
             String tokenVal = waitQueueService.peekToken(memberId);
+
             if (tokenVal != null) {
+                // [성공 케이스] 토큰 있음 -> 수강신청 확정 로직 수행
                 subjectService.applyCourseWithToken(memberId, code);
-                ra.addFlashAttribute("message", "수강신청이 완료되었습니다.");
-                return "redirect:/courses/search";
+
+                response.put("status", "SUCCESS");
+                response.put("message", "수강신청이 완료되었습니다.");
+            } else {
+                // [대기 케이스] 토큰 없음 -> 현재 대기 순번 조회
+                WaitPositionDTO dto = subjectService.getWaitPosition(memberId, code);
+
+                response.put("status", "WAITING");
+                response.put("position", dto.getPosition()); // 순번 전달
             }
-            // 토큰이 아직 없으면 대기 페이지로
-            return "redirect:/courses/apply/wait?code=" + code;
+            return ResponseEntity.ok(response);
 
         } catch (ErrorHandler e) {
-            ra.addFlashAttribute("errorMessage", e.getErrorReason().getMessage());
-            return "redirect:/courses/search";
+            // [실패 케이스] 로직 수행 중 에러 (예: 정원 초과)
+            response.put("status", "FAIL");
+            response.put("message", e.getErrorReason().getMessage());
+            return ResponseEntity.ok(response); // 200 OK로 보내되, 내용은 FAIL 처리
         }
     }
 }
