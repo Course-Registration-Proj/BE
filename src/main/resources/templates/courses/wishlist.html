@@ -2,6 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="_csrf" th:content="${_csrf?.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <title>희망수업 - 수강신청</title>
     <style>
         /* 기존 스타일을 복사 */
@@ -24,6 +26,26 @@
         .tabs a:hover{background:#f9fafb}
         .tabs a.active{background:#fff;border-color:#e5e7eb;border-bottom:1px solid #fff;
             font-weight:700}
+        #queueModal {
+            display: none; /* 평소에는 숨김 */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5); /* 배경 어둡게 */
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 15% auto; /* 화면 중앙 배치 */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
     </style>
 </head>
 <body>
@@ -59,10 +81,13 @@
     <tbody>
     <tr th:each="likeSubject : ${likeSubjectPage.content}">
         <td>
-            <form th:if="${!likeSubject.isRegistered}" th:action="@{/apply}" method="post" style="display: inline;">
-                <input type="hidden" name="code" th:value="${likeSubject.code}" />
-                <button type="submit" class="btn btn-blue">수강신청</button>
-            </form>
+            <button th:if="${!likeSubject.isRegistered}"
+                    class="btn btn-blue"
+                    type="button"
+                    th:attr="data-code=${likeSubject.code}"
+                    onclick="startApplication(this.dataset.code)">
+                수강신청
+            </button>
             <span th:if="${likeSubject.isRegistered}" style="color:gray;">신청완료</span>
         </td>
         <td>
@@ -80,6 +105,15 @@
     </tr>
     </tbody>
 </table>
+
+<div id="queueModal">
+    <div class="modal-content">
+        <h3>⏳ 수강신청 대기 중</h3>
+        <p id="modalMessage">잠시만 기다려주세요...</p>
+        <p id="positionCount" style="font-size:30px; font-weight:bold; color:#2563eb;">-</p>
+        <button class="btn btn-ghost" onclick="closeModal()">닫기 (대기취소)</button>
+    </div>
+</div>
 
 <!-- 희망과목이 없을 때 -->
 <div th:if="${likeSubjectPage == null or likeSubjectPage.empty}">
@@ -113,5 +147,80 @@
     alert([[${errorMessage}]]);
 </script>
 
+<script th:inline="javascript">
+
+    const csrfToken = document.querySelector("meta[name='_csrf']")?.getAttribute("content");
+    const csrfHeader = document.querySelector("meta[name='_csrf_header']")?.getAttribute("content");
+
+    let pollingInterval = null;
+    const modal = document.getElementById('queueModal');
+    const msgElem = document.getElementById('modalMessage');
+    const countElem = document.getElementById('positionCount');
+    function startApplication(code) {
+        if(!confirm("수강신청 하시겠습니까?")) return;
+
+        modal.style.display = "block";
+        msgElem.innerText = "대기열 진입 중...";
+        countElem.innerText = "-";
+
+        fetch('/courses/apply', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [csrfHeader]: csrfToken
+            },
+            body: new URLSearchParams({ code: code })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'WAITING') {
+                    pollStatus(code);
+                } else {
+                    alert(data.message);
+                    closeModal();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("오류 발생");
+                closeModal();
+            });
+    }
+
+    function pollStatus(code) {
+        pollingInterval = setInterval(() => {
+            fetch('/courses/apply/try?code=' + code)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'WAITING') {
+                        msgElem.innerText = "현재 대기 순번";
+                        if (data.position !== null && data.position !== undefined) {
+                            countElem.innerText = data.position + "명";
+                        } else {
+                            countElem.innerText = "집계 중...";
+                        }
+                    } else if (data.status === 'SUCCESS') {
+                        clearInterval(pollingInterval);
+                        alert(data.message);
+                        closeModal();
+                        location.reload();
+                    } else {
+                        clearInterval(pollingInterval);
+                        alert("실패: " + data.message);
+                        closeModal();
+                    }
+                })
+                .catch(err => console.error("통신 에러:", err));
+        }, 1000);
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+        }
+    }
+</script>
 </body>
 </html>
