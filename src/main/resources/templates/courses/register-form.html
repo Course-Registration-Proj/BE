@@ -8,16 +8,50 @@
     <style>
         body{font-family:system-ui,Roboto,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;margin:20px;color:#1f2937}
         h1{margin:0 0 16px;font-size:22px}
+
         form.search{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
         label{display:flex;flex-direction:column;font-size:12px;color:#6b7280}
         input[type="text"]{height:36px;border:1px solid #e5e7eb;border-radius:8px;padding:0 10px;min-width:180px}
         button[type="submit"]{height:36px;border-radius:8px;border:1px solid #2563eb;background:#2563eb;color:#fff;padding:0 14px;cursor:pointer}
-        table{width:100%;border-collapse:collapse;margin-top:10px}
-        th,td{border:1px solid #e5e7eb;padding:10px;text-align:center;font-size:14px}
+
+        table{width:100%;border-collapse:collapse;margin-top:10px;table-layout: fixed;}
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+            vertical-align: middle;
+        }
         th{background:#f9fafb;color:#6b7280}
-        .btn{display:inline-block;height:30px;line-height:28px;padding:0 10px;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
-        .btn-blue{border-color:#2563eb;background:#2563eb;color:#fff}
-        .btn-ghost{background:#fff}
+        .btn {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 110px;
+            height: 36px;
+            padding: 0;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 14px;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .btn-blue {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: #fff;
+        }
+
+        .btn-ghost {
+            background: #fff;
+            color: #374151;
+        }
+        td form {
+            display: inline-block;
+            margin: 0;
+            text-align: center;
+        }
         .btn.disabled,.btn:disabled{opacity:.5;cursor:not-allowed}
         .pagination{margin-top:16px;text-align:center}
         .pagination a,.pagination span{display:inline-block;margin:0 4px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#374151}
@@ -42,6 +76,19 @@
             border-radius: 10px;
             text-align: center;
             box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        }
+        .btn,
+        .btn-blue,
+        .btn-ghost {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 36px;
+            line-height: 36px;
+            padding: 0 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
         }
     </style>
 </head>
@@ -180,8 +227,6 @@
         <p id="modalMessage">잠시만 기다려주세요...</p>
 
         <p id="positionCount" style="font-size:30px; font-weight:bold; color:#2563eb;">-</p>
-
-        <button class="btn btn-ghost" onclick="closeModal()">닫기 (대기취소)</button>
     </div>
 </div>
 
