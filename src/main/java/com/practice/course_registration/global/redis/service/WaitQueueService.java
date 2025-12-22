@@ -48,9 +48,7 @@ public class WaitQueueService {
         String tokenKey = RedisKeyUtils.applyTokenKey(memberId);
         String redisSubjectId = redisTemplate.opsForValue().get(tokenKey);
         if (redisSubjectId == null) return false;
-        if (!redisSubjectId.equals(String.valueOf(subjectId))) return false;
         redisTemplate.delete(tokenKey); // 일회성
         return true;
     }
-
 }

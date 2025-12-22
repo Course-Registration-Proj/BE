@@ -119,11 +119,7 @@ public class SubjectController {
             String tokenVal = waitQueueService.peekToken(memberId);
 
             if (tokenVal != null) {
-                // [성공 케이스] 토큰 있음 -> 수강신청 확정 로직 수행
-                subjectService.applyCourseWithToken(memberId, code);
-
-                response.put("status", "SUCCESS");
-                response.put("message", "수강신청이 완료되었습니다.");
+                response.put("status", "ALLOWED");
             } else {
                 // [대기 케이스] 토큰 없음 -> 현재 대기 순번 조회
                 WaitPositionDTO dto = subjectService.getWaitPosition(memberId, code);
@@ -139,5 +135,17 @@ public class SubjectController {
             response.put("message", e.getErrorReason().getMessage());
             return ResponseEntity.ok(response); // 200 OK로 보내되, 내용은 FAIL 처리
         }
+    }
+
+    @PostMapping("/apply/confirm")
+    @ResponseBody
+    public ResponseEntity<Map<String, Object>> confirmApply(@RequestParam String code) {
+        Map<String, Object> response = new HashMap<>();
+        Long memberId = SecurityUtils.getUserId();
+        subjectService.applyCourseWithToken(memberId, code);
+
+        response.put("status", "SUCCESS");
+        response.put("message", "수강신청이 완료되었습니다.");
+        return ResponseEntity.ok(response);
     }
 }
