@@ -33,10 +33,11 @@ public class SecurityConfig {
                         .expiredUrl("/session/expired")
                 );
         http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/h2-console/**", "/join", "/session/expired", "/login").permitAll() // 일단 개발을 위해서 모든 접근 허용. 필요 시 수정
-                        .anyRequest().authenticated() // 로그인한 회원만 like 페이지에 접속 가능한 것 확인.
+                .authorizeHttpRequests((auth) -> auth.anyRequest().permitAll()
+//                        .requestMatchers("/h2-console/**", "/join", "/session/expired", "/login").permitAll() // 일단 개발을 위해서 모든 접근 허용. 필요 시 수정
+//                        .anyRequest().hasRole("ROLE_USER") // 로그인한 회원만 like 페이지에 접속 가능한 것 확인.
                 );
+
 
         http
                 .formLogin((form) -> form

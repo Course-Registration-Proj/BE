@@ -8,11 +8,14 @@ import com.practice.course_registration.domain.subject.service.SubjectService;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import com.practice.course_registration.global.kafka.KafkaProducer;
 import com.practice.course_registration.global.redis.service.WaitQueueService;
+import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import com.practice.course_registration.global.security.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -29,12 +32,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 @RequestMapping("/courses")
 @Validated
+@Slf4j
 public class SubjectController {
 
     private final SubjectQueryService subjectQueryService;
     private final SubjectService subjectService;
     private final WaitQueueService waitQueueService;
-
 
     /*
     * 기본 수강신청 페이지
@@ -84,7 +87,6 @@ public class SubjectController {
             response.put("status", "WAITING");
             response.put("message", "대기열에 진입했습니다.");
             return ResponseEntity.ok(response);
-
         } catch (ErrorHandler e) {
             // 에러 시 JSON 응답
             response.put("status", "FAIL");
