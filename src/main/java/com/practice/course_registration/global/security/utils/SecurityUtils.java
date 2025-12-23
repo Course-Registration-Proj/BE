@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SecurityUtils {
     private static UserIdProvider userIdProvider;
-    public SecurityUtils(@Qualifier("securityContextUserIdProvider") UserIdProvider userIdProvider) {
+    public SecurityUtils(UserIdProvider userIdProvider) {
         this.userIdProvider = userIdProvider;
     }
 

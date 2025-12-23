@@ -12,7 +12,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class CourseRegistrationApplication {
 	public static void main(String[] args) {
 		ConfigurableApplicationContext context = SpringApplication.run(CourseRegistrationApplication.class, args);
-        HeaderUserIdProvider headerUserIdProvider = context.getBean(HeaderUserIdProvider.class);
-        SecurityUtils.setUserIdProvider(headerUserIdProvider);
 	}
 }
