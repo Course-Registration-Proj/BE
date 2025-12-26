@@ -8,10 +8,10 @@ spring:
     name: course-registration
 
   datasource:
-    url: jdbc:h2:mem:testdb
-    username: sa
-    password:
-    driver-class-name: org.h2.Driver
+    url: jdbc:mysql://localhost:3306/course
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:

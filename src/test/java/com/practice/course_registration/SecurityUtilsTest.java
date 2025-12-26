@@ -3,6 +3,7 @@ package com.practice.course_registration;
 import com.practice.course_registration.global.apiPayload.code.status.ErrorStatus;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import com.practice.course_registration.global.security.domain.CustomUserDetails;
+import com.practice.course_registration.global.security.utils.SecurityContextUserIdProvider;
 import com.practice.course_registration.global.security.utils.SecurityUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -25,6 +26,8 @@ public class SecurityUtilsTest {
     @Mock
     private Authentication authentication;
 
+    private SecurityContextUserIdProvider securityContextUserIdProvider =  new SecurityContextUserIdProvider();
+
     @Mock
     private CustomUserDetails customUserDetails;
 
@@ -33,6 +36,7 @@ public class SecurityUtilsTest {
 
     @BeforeEach
     void setUp() {
+        new SecurityUtils(securityContextUserIdProvider);
         SecurityContextHolder.setContext(securityContext);
     }
 
