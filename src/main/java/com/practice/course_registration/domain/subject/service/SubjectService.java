@@ -9,9 +9,6 @@ import com.practice.course_registration.domain.subject.repository.MemberSubjectR
 import com.practice.course_registration.domain.subject.repository.SubjectRepository;
 import com.practice.course_registration.global.apiPayload.code.status.ErrorStatus;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
-import com.practice.course_registration.global.redis.repository.LuaRepository;
-import com.practice.course_registration.global.redis.service.IdempotencyService;
-import com.practice.course_registration.global.redis.service.WaitQueueService;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,16 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 @Slf4j
 public class SubjectService {
 
     private final SubjectRepository subjectRepository;
     private final MemberSubjectRepository memberSubjectRepository;
     private final MemberRepository memberRepository;
-
-    private final IdempotencyService idempotencyService;
-    private final LuaRepository luaRepository;
-    private final WaitQueueService waitQueueService;
 
 
     private static final int MAX_SCORE = 10;
@@ -41,53 +35,7 @@ public class SubjectService {
 
 
 
-    /*
-    * @TODO : 수강신청 접수 -> 대기열 삽입
-    *   - 실제 수강신청이 완료되지는 않고 수강신청을 위해 대기열에 요청을 넣는 코드
-    *   - rate limit으로 입구 제어 구현
-    *   - 멱등키를 통해 중복클릭 방지 (SSR이라 백엔드에서 직접 처리)
-    *   - LUA 스크립트를 통해서 원자적 처리 구현 (LUA를 선점하면 원자적으로 수강 신청 가능, 물론 redis에 적용, DB에는 미적용)
-    *   - 대기열에 넣어줌
-    * */
-    public void enqueueCourseRequest(Long memberId, String code) {
-        // 입구 제어 (초 당 너무 많은 신청을 보내는지 제어)
-        if (!idempotencyService.rateLimitAllow(memberId, RATE_LIMIT_CNT, Duration.ofSeconds(RATE_LIMIT_TTL))) {
-            throw new ErrorHandler(ErrorStatus.TOO_MANY_REQUESTS);
-        }
-
-        // 멱등키 획득 -> 중복클릭 방지
-        if (!idempotencyService.acquireIdempotency(memberId, code, Duration.ofSeconds(IDEM_KEY_TTL))) {
-            throw new ErrorHandler(ErrorStatus.DUPLICATE_REQUEST);
-        }
-
-        // Lua 선점 여부 확인
-        boolean held = false;
-        try {
-            // 멤버 찾기
-            Member member = findMemberById(memberId);
-
-            // 해당 과목 찾기
-            Subject subject = findByCode(code);
-
-            // 유효성 검사
-            validateCheck(member, subject);
-
-            // 원자성 추가
-            waitQueueService.enqueueGlobal(memberId, subject.getId(), System.currentTimeMillis());
-            log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
-
-        } catch (ErrorHandler e) {
-            idempotencyService.releaseIdempotency(memberId, code);
-            throw e;
-        }
-    }
-
-    /*
-    * @TODO : 토큰 기반 실제 신청
-    * */
-
-    @Transactional
-    public void applyCourseWithToken(Long memberId, String code) {
+    public void apply(Long memberId, String code) {
         // 멤버 찾기
         Member member = findMemberById(memberId);
 
@@ -97,38 +45,19 @@ public class SubjectService {
         // 유효성 검사
         validateCheck(member, subject);
 
-        if (!waitQueueService.consumeToken(memberId, subject.getId())) {
-            throw new ErrorHandler(ErrorStatus.UNAUTHORIZED_ISSUE_TOKEN);
-        }
-
-        // Redis 원자 선점(FCFS)
-        String luaResult = luaRepository.hold(subject.getId(), memberId, subject.getLimitedNum(), HOLD_TTL);
-        switch (luaResult) {
-            case "OK" -> {
-                int updated = subjectRepository.tryIncreaseRegistered(subject.getId());
-                if (updated == 0) {
-                    luaRepository.rollback(subject.getId(), memberId);
-                    throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
-                }
-
-                MemberSubject memberSubject = MemberSubject.builder()
-                        .member(member)
-                        .subject(subject)
-                        .build()
-                ;
-                memberSubjectRepository.save(memberSubject);
-                member.getMemberSubjects().add(memberSubject);
-                subject.getMemberSubjects().add(memberSubject);
-                member.addScore(subject.getScore());
-
-                luaRepository.deleteHoldKeyOnly(subject.getId(), memberId); // hold 정리
-            }
-            case "ALREADY_ENROLLED" -> throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
-            case "CAPACITY_FULL"    -> throw new ErrorHandler(ErrorStatus.CAPACITY_FULL);
-            default -> throw new IllegalStateException("lua 오류 - " + luaResult);
-        }
-
+        // 수강신청
+        int updated = subjectRepository.tryIncreaseRegistered(subject.getId());
+        MemberSubject memberSubject = MemberSubject.builder()
+                .member(member)
+                .subject(subject)
+                .build()
+        ;
+        memberSubjectRepository.save(memberSubject);
+        member.getMemberSubjects().add(memberSubject);
+        subject.getMemberSubjects().add(memberSubject);
+        member.addScore(subject.getScore());
     }
+
 
 
     /**
@@ -176,14 +105,7 @@ public class SubjectService {
         }
     }
 
-    public WaitPositionDTO getWaitPosition(Long memberId, String code) {
-        Long subjectId = findByCode(code).getId();
-        Long position = waitQueueService.getQueuePosition(memberId, subjectId);
-        return WaitPositionDTO.builder()
-                .subjectId(subjectId)
-                .position(position)
-                .build();
-    }
+
 
 
     // 수강취소
@@ -205,8 +127,6 @@ public class SubjectService {
         memberSubjectRepository.deleteByMemberIdAndSubjectId(memberId, subjectId);
         subjectRepository.tryDecreaseRegistered(subjectId);
 
-        // redis 반영
-        luaRepository.cancelEnrolled(subject.getId(), memberId);
     }
 
 

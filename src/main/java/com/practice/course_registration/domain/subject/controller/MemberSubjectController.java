@@ -32,7 +32,7 @@ public class MemberSubjectController {
     @GetMapping("/courses")
     public String myCourses(Model model) {
 
-        Long memberId = SecurityUtils.getUserId();
+        Long memberId = 3L;
 
         List<MyRegisteredSubjectResponseDTO> subjects = subjectQueryService.searchMySubject(memberId);
 
@@ -47,7 +47,7 @@ public class MemberSubjectController {
     @PostMapping("/cancel")
     public String cancelCourses(@RequestParam Long subjectId, RedirectAttributes redirectAttributes) {
 
-        Long memberId = SecurityUtils.getUserId();
+        Long memberId = 3L;
 
         subjectService.cancelCourse(memberId, subjectId);
         redirectAttributes.addFlashAttribute("message", "수강신청이 취소되었습니다");

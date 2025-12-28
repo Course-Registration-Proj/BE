@@ -2,8 +2,6 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="_csrf" th:content="${_csrf?.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf?.headerName}"/>
     <title>수강신청</title>
     <style>
         body{font-family:system-ui,Roboto,Segoe UI,Apple SD Gothic Neo,Noto Sans KR,sans-serif;margin:20px;color:#1f2937}
@@ -57,26 +55,7 @@
         .pagination a,.pagination span{display:inline-block;margin:0 4px;padding:5px 10px;border:1px solid #e5e7eb;border-radius:6px;text-decoration:none;color:#374151}
         .pagination .active{background:#eef2ff;border-color:#c7d2fe;font-weight:700}
         .muted{color:#6b7280;font-size:12px}
-        #queueModal {
-            display: none; /* 평소에는 숨김 */
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5); /* 배경 어둡게 */
-        }
-        .modal-content {
-            background-color: #fff;
-            margin: 15% auto; /* 화면 중앙 배치 */
-            padding: 20px;
-            border: 1px solid #888;
-            width: 300px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-        }
+
         .btn,
         .btn-blue,
         .btn-ghost {
@@ -116,7 +95,6 @@
         font-weight:700}
 </style>
 
-
 <!-- 🔎 필터: 결과 엔드포인트로 GET -->
 <form class="search" th:action="@{/courses/search}" method="get" th:if="${activeTab != 'wishlist'}">
     <label>학수번호
@@ -154,22 +132,21 @@
     </thead>
     <tbody>
     <tr th:each="s : ${subjects}">
-        <!-- 수강신청 버튼(활성/비활성 토글) -->
+        <!-- 수강신청: 대기열 없이 form submit -->
         <td>
-            <!-- 신청 안 한 과목이면 '수강신청' 버튼 -->
-            <button th:if="${!s.registered}"
-                    class="btn btn-blue"
-                    type="button"
-                    th:attr="data-code=${s.code}"
-                    onclick="startApplication(this.dataset.code)">
-                수강신청
-            </button>
+            <form th:if="${!s.registered}" th:action="@{/courses/apply}" method="post" style="display:inline">
+                <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
+                <input type="hidden" name="code" th:value="${s.code}">
+                <button class="btn btn-blue" type="submit"
+                        onclick="return confirm('수강신청 하시겠습니까?');">
+                    수강신청
+                </button>
+            </form>
 
-            <!-- 이미 신청한 과목이면 버튼 없음 (또는 텍스트 표시) -->
             <span th:if="${s.registered}" style="color:gray;">신청 완료</span>
         </td>
 
-        <!-- 희망 버튼(활성/비활성 토글) -->
+        <!-- 희망추가 -->
         <td>
             <form th:action="@{/courses/wish}" method="post" style="display:inline">
                 <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
@@ -209,10 +186,10 @@
 
     <span th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}"
           th:classappend="${i == page.number} ? 'active'">
-    <a th:href="@{/courses/search(page=${i}, size=${page.size},
-                                  code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}"
-       th:text="${i + 1}">1</a>
-  </span>
+        <a th:href="@{/courses/search(page=${i}, size=${page.size},
+                                      code=${filters.code}, subjectName=${filters.subjectName}, professorName=${filters.professorName})}"
+           th:text="${i + 1}">1</a>
+    </span>
 
     <a th:if="${page.hasNext()}"
        th:href="@{/courses/search(page=${page.number+1}, size=${page.size},
@@ -221,111 +198,16 @@
     </a>
 </div>
 
-<div id="queueModal">
-    <div class="modal-content">
-        <h3>⏳ 수강신청 대기 중</h3>
-        <p id="modalMessage">잠시만 기다려주세요...</p>
-
-        <p id="positionCount" style="font-size:30px; font-weight:bold; color:#2563eb;">-</p>
-    </div>
-</div>
-
-
+<!-- 메시지 알림: flashAttribute(message/errorMessage) -->
 <script th:inline="javascript">
     /*<![CDATA[*/
     window.addEventListener('DOMContentLoaded', function() {
         var message = /*[[${message}]]*/ null;
         var errorMessage = /*[[${errorMessage}]]*/ null;
 
-        if (message) {
-            alert(message);
-        }
-
-        if (errorMessage) {
-            alert(errorMessage);
-        }
+        if (message) alert(message);
+        if (errorMessage) alert(errorMessage);
     });
-
-    const csrfToken = document.querySelector("meta[name='_csrf']")?.getAttribute("content");
-    const csrfHeader = document.querySelector("meta[name='_csrf_header']")?.getAttribute("content");
-
-    let pollingInterval = null;
-    const modal = document.getElementById('queueModal');
-    const msgElem = document.getElementById('modalMessage');
-    const countElem = document.getElementById('positionCount');
-
-    // 1. 수강신청 시작 (POST /courses/apply)
-    function startApplication(code) {
-        if(!confirm("수강신청 하시겠습니까?")) return;
-
-        modal.style.display = "block";
-        msgElem.innerText = "대기열 진입 중...";
-        countElem.innerText = "-";
-
-        fetch('/courses/apply', { // [수정된 컨트롤러 메서드 매핑]
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                [csrfHeader]: csrfToken
-            },
-            body: new URLSearchParams({ code: code })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'WAITING') {
-                    pollStatus(code); // 폴링 시작
-                } else {
-                    alert(data.message);
-                    closeModal();
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("오류 발생");
-                closeModal();
-            });
-    }
-
-    // 2. 상태 확인 (GET /courses/apply/try)
-    // register-form.html 의 pollStatus 함수 수정
-    function pollStatus(code) {
-        pollingInterval = setInterval(() => {
-            fetch('/courses/apply/try?code=' + code)
-                .then(res => res.json())
-                .then(data => {
-                    // [디버깅용] 서버가 주는 데이터를 콘솔에 찍어봅니다.
-                    console.log("서버 응답:", data);
-
-                    if (data.status === 'WAITING') {
-                        msgElem.innerText = "현재 대기 순번";
-                        // 데이터가 있으면 보여주고, 없으면 '집계중' 표시
-                        if (data.position !== null && data.position !== undefined) {
-                            countElem.innerText = data.position + "명";
-                        } else {
-                            countElem.innerText = "집계 중...";
-                        }
-                    } else if (data.status === 'SUCCESS') {
-                        clearInterval(pollingInterval);
-                        alert(data.message);
-                        closeModal();
-                        location.reload();
-                    } else {
-                        clearInterval(pollingInterval);
-                        alert("실패: " + data.message);
-                        closeModal();
-                    }
-                })
-                .catch(err => console.error("통신 에러:", err));
-        }, 1000);
-    }
-
-    function closeModal() {
-        modal.style.display = "none";
-        if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-        }
-    }
     /*]]>*/
 </script>
 

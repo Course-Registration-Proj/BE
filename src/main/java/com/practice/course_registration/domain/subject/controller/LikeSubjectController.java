@@ -42,7 +42,7 @@ public class LikeSubjectController {
     @PostMapping("/courses/wish")
     public String addWishSubject(@RequestParam String code,
                                  RedirectAttributes redirectAttributes) {
-        Long memberId = SecurityUtils.getUserId();
+        Long memberId = 3L;
         try {
 
             likeSubjectService.addLikeSubject(memberId, code);
@@ -59,7 +59,7 @@ public class LikeSubjectController {
                        @RequestParam(defaultValue = "0") int page,
                        @RequestParam(defaultValue = "3") int size){
 
-        Long id = SecurityUtils.getUserId();
+        Long id = 3L;
         Page<LikeSubjectDTO> likeSubjectPage = likeSubjectService.getLikeSubjectsByUserId(id, page, size);
 
         model.addAttribute("likeSubjectPage", likeSubjectPage);;
@@ -71,9 +71,9 @@ public class LikeSubjectController {
     public String applyCourse(@RequestParam String code,
                               RedirectAttributes redirectAttributes) {
 
-        Long memberId = SecurityUtils.getUserId();
+        Long memberId = 3L;
         try {
-            subjectService.enqueueCourseRequest(memberId, code);
+            subjectService.apply(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");
         } catch (ErrorHandler e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
@@ -85,7 +85,7 @@ public class LikeSubjectController {
     @PostMapping("/cancel")
     public String cancelCourse(@RequestParam String code,
                                RedirectAttributes redirectAttributes) {
-        Long memberId = SecurityUtils.getUserId();
+        Long memberId = 3L;
         try {
             // SubjectService.cancelCourse()는 subjectId를 받으므로
             // code로 Subject를 먼저 찾기
@@ -104,7 +104,7 @@ public class LikeSubjectController {
     @PostMapping("/remove-wish")
     public String removeWishSubject(@RequestParam String code,
                                     RedirectAttributes redirectAttributes) {
-        Long memberId = SecurityUtils.getUserId();
+        Long memberId = 3L;
         try {
             likeSubjectService.removeLikeSubject(memberId, code);
             redirectAttributes.addFlashAttribute("message", "희망과목에서 삭제되었습니다");

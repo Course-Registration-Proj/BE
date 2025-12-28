@@ -67,7 +67,7 @@
 
 <h1>신청내역</h1>
 
-<!-- 탭 네비게이션 (그대로 유지) -->
+<!-- 탭 네비게이션 -->
 <nav class="tabs">
     <a th:href="@{/courses}"
        th:classappend="${activeTab}=='register' ? ' active'">수강신청</a>
@@ -86,7 +86,6 @@
     .tabs a.active{background:#fff;border-color:#e5e7eb;border-bottom:1px solid #fff;
         font-weight:700}
 </style>
-
 
 <!-- 건수 -->
 <div class="muted"
@@ -111,12 +110,14 @@
     </thead>
     <tbody>
     <tr th:each="a : ${applies}">
-        <!-- 항상 활성화된 취소 버튼 -->
         <td>
             <form th:action="@{/my/cancel}" method="post" style="display:inline">
                 <input type="hidden" name="_csrf" th:value="${_csrf?.token}">
                 <input type="hidden" name="subjectId" th:value="${a.id}">
-                <button class="btn btn-danger" type="submit">신청취소</button>
+                <button class="btn btn-danger" type="submit"
+                        onclick="return confirm('수강신청을 취소하시겠습니까?');">
+                    신청취소
+                </button>
             </form>
         </td>
 
@@ -136,13 +137,17 @@
     </tbody>
 </table>
 
-<!-- 메시지 알림 -->
-<script th:if="${message}" th:inline="javascript">
-    alert([[${message}]]);
-</script>
+<!-- 메시지 알림: flashAttribute(message/errorMessage) -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    window.addEventListener('DOMContentLoaded', function() {
+        var message = /*[[${message}]]*/ null;
+        var errorMessage = /*[[${errorMessage}]]*/ null;
 
-<script th:if="${errorMessage}" th:inline="javascript">
-    alert([[${errorMessage}]]);
+        if (message) alert(message);
+        if (errorMessage) alert(errorMessage);
+    });
+    /*]]>*/
 </script>
 
 </body>
