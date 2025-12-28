@@ -1,0 +1,70 @@
+name: CD Test Pipeline
+
+on:
+  push:
+    branches:
+      - 'test/**'
+      - 'test/*'
+
+jobs:
+  build-and-deploy-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Clean and Build JAR
+        run: |
+          ./gradlew clean
+          ./gradlew bootJar
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image (tag = commit SHA)
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/docker-springboot:${{ github.sha }} .
+
+      - name: Push Docker image (tag = commit SHA)
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/docker-springboot:${{ github.sha }}
+
+      - name: Deploy to EC2 (test)
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            export DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+            export IMAGE_TAG=${{ github.sha }}
+
+            # DB 환경변수 (현재 prod compose를 재사용한다는 전제)
+            export EC2_PRIVATE_IP=${{ secrets.EC2_PRIVATE_IP }}
+            export SPRING_PROFILES_ACTIVE=prod
+            export DB_HOST=${{ secrets.DB_HOST }}
+            export DB_PORT=${{ secrets.DB_PORT }}
+            export DB_NAME=${{ secrets.DB_NAME }}
+            export DB_USERNAME=${{ secrets.DB_USERNAME }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+            echo "[INFO] Deploying test build with IMAGE_TAG=$IMAGE_TAG"
+
+            # app만 최신 SHA 태그로 pull & restart
+            sudo -E docker compose -f docker-compose.prod.yml pull app
+            sudo -E docker compose -f docker-compose.prod.yml up -d --no-deps app
+
+            sudo docker image prune -f
