@@ -69,10 +69,9 @@ public class SubjectController {
 
     // 수강신청
     @PostMapping("/apply")
-    public String applyCourse(@RequestParam String code,
+    public String applyCourse(@RequestParam String code,@RequestParam Long memberId,
                               RedirectAttributes redirectAttributes) {
 
-        Long memberId = 3L;
         try {
             subjectService.apply(memberId, code);
             redirectAttributes.addFlashAttribute("message", "수강신청이 정상적으로 성공했습니다");

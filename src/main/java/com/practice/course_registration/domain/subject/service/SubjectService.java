@@ -36,17 +36,21 @@ public class SubjectService {
 
 
     public void apply(Long memberId, String code) {
+        log.info("======= 수강신청 시작! - " + memberId + ", " + code);
         // 멤버 찾기
         Member member = findMemberById(memberId);
 
         // 해당 과목 찾기
         Subject subject = findByCode(code);
 
+        log.info("======= 수강신청 유효성 검사 시작! - " + memberId + ", " + code);
+
         // 유효성 검사
         validateCheck(member, subject);
 
+        log.info("======= DB저장 시작! - " + memberId + ", " + code);
         // 수강신청
-        int updated = subjectRepository.tryIncreaseRegistered(subject.getId());
+        subjectRepository.tryIncreaseRegistered(subject.getId());
         MemberSubject memberSubject = MemberSubject.builder()
                 .member(member)
                 .subject(subject)
@@ -56,6 +60,8 @@ public class SubjectService {
         member.getMemberSubjects().add(memberSubject);
         subject.getMemberSubjects().add(memberSubject);
         member.addScore(subject.getScore());
+
+        log.info("======= 수강신청 성공! - " + memberId + ", " + code);
     }
 
 
