@@ -13,7 +13,7 @@ public class PublishIssueTokenScheduler {
 
     private final LuaRepository luaRepository;
 
-    private static final int PERMITS_PER_TICKS = 50;   // tick당 최대 발급 수
+    private static final int PERMITS_PER_TICKS = 100;   // tick당 최대 발급 수
     private static final int TOKEN_TTL = 5; // token ttl
 
     @Scheduled(fixedDelay = 100)

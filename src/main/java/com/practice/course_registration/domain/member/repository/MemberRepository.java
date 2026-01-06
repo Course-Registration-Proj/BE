@@ -12,8 +12,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Member findByLoginId(String loginId);
 
-    @Query("select m from Member m " +
-            "left join fetch m.memberSubjects " +
-            "where m.id = :id")
-    Optional<Member> findWithSubjectsById(@Param("id") Long id);
+        @Query("select m from Member m " +
+                "left join fetch m.memberSubjects " +
+                "where m.id = :id")
+        Optional<Member> findWithSubjectsById(@Param("id") Long id);
+
+        Optional<Member> findById(long id);
 }
