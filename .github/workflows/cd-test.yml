@@ -63,7 +63,7 @@ jobs:
             echo "[INFO] Deploying test build with IMAGE_TAG=$IMAGE_TAG"
 
             # app만 최신 SHA 태그로 pull & restart
-            sudo -E docker compose -f docker-compose.prod.yml pull app
-            sudo -E docker compose -f docker-compose.prod.yml up -d --no-deps app
+            sudo -E docker-compose -f docker-compose.prod.yml pull app
+            sudo -E docker-compose -f docker-compose.prod.yml up -d --no-deps app
 
             sudo docker image prune -f
