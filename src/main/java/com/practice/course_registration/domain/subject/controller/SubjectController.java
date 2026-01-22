@@ -80,8 +80,13 @@ public class SubjectController {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            long start = System.currentTimeMillis();
+            log.debug("Start to apply course with code {}", code);
             // 대기열 등록
             subjectService.enqueueCourseRequest(memberId, code);
+            long end = System.currentTimeMillis();
+
+            log.debug("Apply course request took " + (end - start) + " ms");
 
             // 성공 시 JSON 응답
             response.put("status", "WAITING");

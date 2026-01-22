@@ -140,14 +140,16 @@ public class SubjectService {
      * - 신청가능학점을 넘긴경우 -> 위 코드에서 lua 결과로 판단
      * */
     private void validateCheck(Member member, Subject subject) {
-        if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
+        boolean alreadyApplied = member.getMemberSubjects().stream()
+                .anyMatch(ms -> ms.getSubject().getId().equals(subject.getId()));
+
+        if (alreadyApplied) {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
         }
 
         if (member.getRegisteredScore() + subject.getScore() > MAX_SCORE) {
             throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
         }
-
         boolean conflict = member.getMemberSubjects().stream()
                 .map(MemberSubject::getSubject)
                 .filter(subj ->
