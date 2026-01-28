@@ -64,16 +64,16 @@ public class SubjectService {
         boolean held = false;
         try {
             // 멤버 찾기
-            //Member member = findMemberById(memberId);
+            Member member = findMemberById(memberId);
 
             // 해당 과목 찾기
-            //Subject subject = findByCode(code);
+            Subject subject = findByCode(code);
 
             // 유효성 검사
-            //validateCheck(member, subject);
+            validateCheck(member, subject);
 
             // 원자성 추가
-//            waitQueueService.enqueueGlobal(memberId, subject.getId(), System.currentTimeMillis());
+            waitQueueService.enqueueGlobal(memberId, subject.getId(), System.currentTimeMillis());
             waitQueueService.enqueueGlobal(memberId, 1L, System.currentTimeMillis());
             //log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
 
