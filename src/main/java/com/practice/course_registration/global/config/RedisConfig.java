@@ -30,17 +30,7 @@ public class RedisConfig {
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, redisPort);
 
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMaxTotal(200);
-        poolConfig.setMaxIdle(50);
-        poolConfig.setMinIdle(10);
-
-        // 3. Lettuce 설정에 풀 적용
-        LettucePoolingClientConfiguration clientConfiguration = LettucePoolingClientConfiguration.builder()
-                .poolConfig(poolConfig)
-                .build();
-
-        return new LettuceConnectionFactory(configuration, clientConfiguration);
+        return new LettuceConnectionFactory(configuration);
     }
 
     @Bean

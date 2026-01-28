@@ -3,7 +3,11 @@ spring:
     redis:
       host: ${SPRING_DATA_REDIS_HOST:redis}
       port: 6379
-
+      lettuce:
+        pool:
+          max-active: 200    # 최대 200개까지 늘려라
+          max-idle: 50
+          min-idle: 10
   h2:
     console:
       enabled: false
