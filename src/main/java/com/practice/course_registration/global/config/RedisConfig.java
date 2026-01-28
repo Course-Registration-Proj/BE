@@ -29,21 +29,7 @@ public class RedisConfig {
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, redisPort);
-
-        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
-        poolConfig.setMaxTotal(200);
-        poolConfig.setMaxIdle(50);
-        poolConfig.setMinIdle(10);
-
-        LettucePoolingClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
-                .poolConfig(poolConfig)
-                .build();
-
-        LettuceConnectionFactory factory = new LettuceConnectionFactory(configuration, clientConfig);
-
-        factory.setShareNativeConnection(false);
-
-        return factory;
+        return new LettuceConnectionFactory(configuration);
     }
 
     @Bean
