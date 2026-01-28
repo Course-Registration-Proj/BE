@@ -21,10 +21,12 @@ public class WaitQueueService {
 
     // 전역 대기열에 요청 삽입
     public void enqueueGlobal(Long memberId, Long subjectId, long nowMillis) {
+        long start = System.currentTimeMillis(); // 측정 시작
         String queueKey = RedisKeyUtils.globalApplyQueueKey();
         String value = memberId + ":" + subjectId; // payload
         redisTemplate.opsForZSet().add(queueKey, value, nowMillis);
-
+        long end = System.currentTimeMillis(); // 측정 종료
+        log.info("Redis [enqueueGlobal] 소요시간: {}ms", (end - start));
         // Long size = redisTemplate.opsForZSet().size(queueKey);
         // log.info("대기열 등록: {}, queueSize={}", value, size);
     }
