@@ -74,7 +74,7 @@ public class SubjectService {
 
             // 원자성 추가
             waitQueueService.enqueueGlobal(memberId, subject.getId(), System.currentTimeMillis());
-            log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
+            //log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
 
         } catch (ErrorHandler e) {
             idempotencyService.releaseIdempotency(memberId, code);

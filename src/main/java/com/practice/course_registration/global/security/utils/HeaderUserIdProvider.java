@@ -17,7 +17,7 @@ public class HeaderUserIdProvider implements UserIdProvider {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
         String userId = request.getHeader("userId");
-        System.out.println("userId = " + userId);
+        // System.out.println("userId = " + userId);
         if (userId == null || userId.isEmpty()){
             throw new ErrorHandler(ErrorStatus._UNAUTHORIZED);
         }

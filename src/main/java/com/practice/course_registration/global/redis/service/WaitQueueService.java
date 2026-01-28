@@ -25,8 +25,8 @@ public class WaitQueueService {
         String value = memberId + ":" + subjectId; // payload
         redisTemplate.opsForZSet().add(queueKey, value, nowMillis);
 
-        Long size = redisTemplate.opsForZSet().size(queueKey);
-        log.info("대기열 등록: {}, queueSize={}", value, size);
+        // Long size = redisTemplate.opsForZSet().size(queueKey);
+        // log.info("대기열 등록: {}, queueSize={}", value, size);
     }
 
     // 사용자에게 보여줄 대기열 순번 조회

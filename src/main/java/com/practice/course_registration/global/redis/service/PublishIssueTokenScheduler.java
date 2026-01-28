@@ -21,7 +21,7 @@ public class PublishIssueTokenScheduler {
         try {
             long cnt = luaRepository.publishIssueTokens(PERMITS_PER_TICKS, TOKEN_TTL);
             if (cnt > 0) {
-                log.info("토큰 발급 성공: count={}, sample={}", cnt);
+                // log.info("토큰 발급 성공: count={}, sample={}", cnt);
             }
         } catch (Exception e) {
             log.error("토큰 발급 실패", e);

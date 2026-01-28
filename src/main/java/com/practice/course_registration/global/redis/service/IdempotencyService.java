@@ -20,7 +20,7 @@ public class IdempotencyService {
     public boolean rateLimitAllow(Long memberId, int limit, Duration ttl) {
         String key = RedisKeyUtils.rateLimitKey(memberId);
         Long cnt = stringRedisTemplate.opsForValue().increment(key);
-        System.out.println("cnt : " + cnt);
+        // System.out.println("cnt : " + cnt);
         // 첫 요청인 경우 -> TTL 1로 세팅
         if (cnt != null && cnt == 1L) {
             stringRedisTemplate.expire(key, ttl);
