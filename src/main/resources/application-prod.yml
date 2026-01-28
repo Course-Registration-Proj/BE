@@ -1,4 +1,9 @@
 spring:
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: 6379
+
   h2:
     console:
       enabled: false
@@ -21,12 +26,6 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
-  data:
-    redis:
-      lettuce:
-        pool:
-          max-active: 100
-          max-idle: 20
 
   web:
     resources:
