@@ -30,7 +30,20 @@ public class RedisConfig {
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, redisPort);
 
-        return new LettuceConnectionFactory(configuration);
+        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        poolConfig.setMaxTotal(200);
+        poolConfig.setMaxIdle(50);
+        poolConfig.setMinIdle(10);
+
+        LettucePoolingClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
+                .poolConfig(poolConfig)
+                .build();
+
+        LettuceConnectionFactory factory = new LettuceConnectionFactory(configuration, clientConfig);
+
+        factory.setShareNativeConnection(false);
+
+        return factory;
     }
 
     @Bean
