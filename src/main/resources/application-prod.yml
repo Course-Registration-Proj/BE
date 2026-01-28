@@ -21,6 +21,12 @@ spring:
       hibernate:
         format_sql: true
     open-in-view: false
+  data:
+    redis:
+      lettuce:
+        pool:
+          max-active: 100
+          max-idle: 20
 
   web:
     resources:
