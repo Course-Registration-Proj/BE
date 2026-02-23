@@ -59,6 +59,8 @@ jobs:
             export DB_NAME=${{ secrets.DB_NAME }}
             export DB_USERNAME=${{ secrets.DB_USERNAME }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            
+            export JAVA_TOOL_OPTIONS="-Xms256m -Xmx256m -XX:+UseG1GC -verbose:gc"
 
             echo "[INFO] Deploying test build with IMAGE_TAG=$IMAGE_TAG"
 
