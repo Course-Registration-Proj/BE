@@ -1,4 +1,9 @@
 spring:
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: 6379
+
   h2:
     console:
       enabled: false
@@ -20,16 +25,8 @@ spring:
     properties:
       hibernate:
         format_sql: true
+    open-in-view: false
 
-  data:
-    redis:
-      host: redis
-      port: 6379
-      connect-timeout: 2000
-      database: 0
-
-  #  mvc:
-  #    throw-exception-if-no-handler-found: true
   web:
     resources:
       add-mappings: false
@@ -38,6 +35,10 @@ spring:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
 
 server:
+  tomcat:
+    threads:
+      max: 400
+    accept-count: 500
   servlet:
     session:
       timeout: 30m # 마지막 활동으로부터 30분 지나면 로그아웃

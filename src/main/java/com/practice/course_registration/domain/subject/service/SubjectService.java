@@ -64,17 +64,18 @@ public class SubjectService {
         boolean held = false;
         try {
             // 멤버 찾기
-            Member member = findMemberById(memberId);
+             Member member = findMemberById(memberId);
 
             // 해당 과목 찾기
-            Subject subject = findByCode(code);
+             Subject subject = findByCode(code);
 
             // 유효성 검사
-            validateCheck(member, subject);
+             validateCheck(member, subject);
 
             // 원자성 추가
-            waitQueueService.enqueueGlobal(memberId, subject.getId(), System.currentTimeMillis());
-            log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
+             waitQueueService.enqueueGlobal(memberId, subject.getId(), System.currentTimeMillis());
+//            waitQueueService.enqueueGlobal(memberId, 1L, System.currentTimeMillis());
+            //log.info("수강신청 접수 성공 (대기열 삽입). Course: {}, Member: {}", subject.getId(), memberId);
 
         } catch (ErrorHandler e) {
             idempotencyService.releaseIdempotency(memberId, code);
@@ -140,14 +141,16 @@ public class SubjectService {
      * - 신청가능학점을 넘긴경우 -> 위 코드에서 lua 결과로 판단
      * */
     private void validateCheck(Member member, Subject subject) {
-        if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
+        boolean alreadyApplied = member.getMemberSubjects().stream()
+                .anyMatch(ms -> ms.getSubject().getId().equals(subject.getId()));
+
+        if (alreadyApplied) {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
         }
 
         if (member.getRegisteredScore() + subject.getScore() > MAX_SCORE) {
             throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
         }
-
         boolean conflict = member.getMemberSubjects().stream()
                 .map(MemberSubject::getSubject)
                 .filter(subj ->

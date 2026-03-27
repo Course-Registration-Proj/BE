@@ -59,11 +59,10 @@ jobs:
             export DB_NAME=${{ secrets.DB_NAME }}
             export DB_USERNAME=${{ secrets.DB_USERNAME }}
             export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-
             echo "[INFO] Deploying test build with IMAGE_TAG=$IMAGE_TAG"
 
             # app만 최신 SHA 태그로 pull & restart
-            sudo -E docker compose -f docker-compose.prod.yml pull app
-            sudo -E docker compose -f docker-compose.prod.yml up -d --no-deps app
+            sudo -E docker-compose -f docker-compose.prod.yml pull app
+            sudo -E docker-compose -f docker-compose.prod.yml up -d
 
             sudo docker image prune -f

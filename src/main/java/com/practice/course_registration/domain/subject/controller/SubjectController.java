@@ -6,7 +6,6 @@ import com.practice.course_registration.domain.subject.dto.WaitPositionDTO;
 import com.practice.course_registration.domain.subject.service.SubjectQueryService;
 import com.practice.course_registration.domain.subject.service.SubjectService;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
-import com.practice.course_registration.global.kafka.KafkaProducer;
 import com.practice.course_registration.global.redis.service.WaitQueueService;
 import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import com.practice.course_registration.global.security.utils.SecurityUtils;
@@ -80,8 +79,13 @@ public class SubjectController {
         Map<String, Object> response = new HashMap<>();
 
         try {
+            long start = System.currentTimeMillis();
+            log.debug("Start to apply course with code {}", code);
             // 대기열 등록
             subjectService.enqueueCourseRequest(memberId, code);
+            long end = System.currentTimeMillis();
+
+            log.debug("Apply course request took " + (end - start) + " ms");
 
             // 성공 시 JSON 응답
             response.put("status", "WAITING");

@@ -34,6 +34,17 @@ spring:
     resources:
       add-mappings: false
 
+logging:
+  level:
+    io.lettuce.core.protocol: DEBUG
+    org.springframework.data.redis: DEBUG
+    org:
+      hibernate:
+        SQL: debug
+#      apache.tomcat.util.http.Parameters: debug
+#      springframework.web.servlet.DispatcherServlet: debug
+#    com.practice.course_registration: debug
+
 server:
   servlet:
     session:
