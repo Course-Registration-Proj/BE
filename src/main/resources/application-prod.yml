@@ -8,7 +8,7 @@ spring:
     name: course-registration
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -38,3 +38,10 @@ server:
   servlet:
     session:
       timeout: 30m # 마지막 활동으로부터 30분 지나면 로그아웃
+
+# 부하테스트용 시드 데이터 (DataInitializer)
+app:
+  seed:
+    enabled: true
+    member-count: 100
+    member-password: test1234
