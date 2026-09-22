@@ -1,8 +1,6 @@
 package com.practice.course_registration.domain.subject.repository;
 
-import com.practice.course_registration.domain.member.domain.Member;
 import com.practice.course_registration.domain.subject.domain.MemberSubject;
-import com.practice.course_registration.domain.subject.domain.Subject;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -17,18 +15,16 @@ public interface MemberSubjectRepository extends JpaRepository<MemberSubject, Lo
     @Query("""
       SELECT ms.subject.id
       FROM MemberSubject ms
-      WHERE ms.member = :member AND ms.subject.id IN :subjectIds
+      WHERE ms.memberId = :memberId AND ms.subject.id IN :subjectIds
     """)
-    Set<Long> findAllIdByMemberAndSubject(@Param("member") Member member, @Param("subjectIds") List<Long> subjectIds);
-
-    Optional<MemberSubject> findByMemberAndSubject(Member member, Subject subject);
+    Set<Long> findAllIdByMemberIdAndSubject(@Param("memberId") Long memberId, @Param("subjectIds") List<Long> subjectIds);
 
     Optional<MemberSubject> findByMemberIdAndSubjectId(Long memberId, Long subjectId);
 
-    List<MemberSubject> findAllByMember(Member member);
+    List<MemberSubject> findAllByMemberId(Long memberId);
 
     @Modifying
-    @Query("delete from MemberSubject ms where ms.member.id = :memberId and ms.subject.id = :subjectId")
+    @Query("delete from MemberSubject ms where ms.memberId = :memberId and ms.subject.id = :subjectId")
     void deleteByMemberIdAndSubjectId(@Param("memberId") Long memberId, @Param("subjectId") Long subjectId);
 
 }

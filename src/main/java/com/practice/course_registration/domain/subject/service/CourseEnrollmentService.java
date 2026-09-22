@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -34,7 +36,7 @@ public class CourseEnrollmentService {
         // 해당 과목 찾기
         Subject subject = findSubjectById(subjectId);
 
-        if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
+        if (memberSubjectRepository.findByMemberIdAndSubjectId(memberId, subjectId).isPresent()) {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
         }
 
@@ -42,7 +44,10 @@ public class CourseEnrollmentService {
             throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
         }
 
-        int isSameCode = member.getMemberSubjects().stream()
+        // 컬렉션 탐색 대신 memberId로 신청 내역 조회
+        List<MemberSubject> myEnrollments = memberSubjectRepository.findAllByMemberId(memberId);
+
+        int isSameCode = myEnrollments.stream()
                 .map(MemberSubject::getSubject)
                 .filter(subj ->
                         subj.getCode().equals(subject.getCode())
@@ -56,7 +61,7 @@ public class CourseEnrollmentService {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
         }
 
-        boolean conflict = member.getMemberSubjects().stream()
+        boolean conflict = myEnrollments.stream()
                 .map(MemberSubject::getSubject)
                 .filter(subj ->
                         subj.getSubjectDay() == subject.getSubjectDay()
@@ -81,13 +86,11 @@ public class CourseEnrollmentService {
 
         // 저장
         MemberSubject memberSubject = MemberSubject.builder()
-                .member(member)
+                .memberId(memberId)
                 .subject(subject)
                 .build();
 
         memberSubjectRepository.save(memberSubject);
-        member.getMemberSubjects().add(memberSubject);
-        subject.getMemberSubjects().add(memberSubject);
 
         // redis hold key 삭제
         luaRepository.deleteHoldKeyOnly(subject.getId(), memberId);

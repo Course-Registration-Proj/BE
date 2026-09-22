@@ -1,7 +1,5 @@
 package com.practice.course_registration.domain.subject.service;
 
-import com.practice.course_registration.domain.member.domain.Member;
-import com.practice.course_registration.domain.member.repository.MemberRepository;
 import com.practice.course_registration.domain.subject.domain.LikeSubject;
 import com.practice.course_registration.domain.subject.domain.Subject;
 import com.practice.course_registration.domain.subject.dto.LikeSubjectDTO;
@@ -27,16 +25,13 @@ public class LikeSubjectService {
     private final LikeSubjectRepository likeSubjectRepository;
     private final MemberSubjectRepository memberSubjectRepository;
     private final SubjectRepository subjectRepository;
-    private final MemberRepository memberRepository;
 
     public LikeSubjectService(LikeSubjectRepository likeSubjectRepository,
                               MemberSubjectRepository memberSubjectRepository,
-                              SubjectRepository subjectRepository,
-                              MemberRepository memberRepository) {
+                              SubjectRepository subjectRepository) {
         this.likeSubjectRepository = likeSubjectRepository;
         this.memberSubjectRepository = memberSubjectRepository;
         this.subjectRepository = subjectRepository;
-        this.memberRepository = memberRepository;
     }
 
     @Transactional
@@ -45,10 +40,6 @@ public class LikeSubjectService {
         Subject subject = subjectRepository.findByCode(code)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.SUBJECT_NOT_FOUND));
 
-        // Member 찾기
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
-
         // 이미 희망과목에 있는지 확인
         if (likeSubjectRepository.findByMemberIdAndSubjectId(memberId, subject.getId()).isPresent()) {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
@@ -56,7 +47,7 @@ public class LikeSubjectService {
 
         // LikeSubject 생성 및 저장
         LikeSubject likeSubject = LikeSubject.builder()
-                .member(member)
+                .memberId(memberId)
                 .subject(subject)
                 .isRegistration(false)
                 .build();
