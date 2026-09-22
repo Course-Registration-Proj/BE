@@ -13,9 +13,9 @@ import java.util.Set;
 public interface MemberSubjectRepository extends JpaRepository<MemberSubject, Long> {
 
     @Query("""
-      SELECT ms.subject.id
+      SELECT ms.subjectId
       FROM MemberSubject ms
-      WHERE ms.memberId = :memberId AND ms.subject.id IN :subjectIds
+      WHERE ms.memberId = :memberId AND ms.subjectId IN :subjectIds
     """)
     Set<Long> findAllIdByMemberIdAndSubject(@Param("memberId") Long memberId, @Param("subjectIds") List<Long> subjectIds);
 
@@ -24,7 +24,7 @@ public interface MemberSubjectRepository extends JpaRepository<MemberSubject, Lo
     List<MemberSubject> findAllByMemberId(Long memberId);
 
     @Modifying
-    @Query("delete from MemberSubject ms where ms.memberId = :memberId and ms.subject.id = :subjectId")
+    @Query("delete from MemberSubject ms where ms.memberId = :memberId and ms.subjectId = :subjectId")
     void deleteByMemberIdAndSubjectId(@Param("memberId") Long memberId, @Param("subjectId") Long subjectId);
 
 }

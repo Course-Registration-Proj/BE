@@ -77,9 +77,11 @@ public class SubjectQueryService {
 
     public List<MyRegisteredSubjectResponseDTO> searchMySubject(Long memberId) {
 
-        List<MemberSubject> memberSubjects = memberSubjectRepository.findAllByMemberId(memberId);
-        return memberSubjects.stream()
-                .map(MemberSubject::getSubject)
+        List<Long> subjectIds = memberSubjectRepository.findAllByMemberId(memberId).stream()
+                .map(MemberSubject::getSubjectId)
+                .toList();
+        List<Subject> subjects = subjectRepository.findAllById(subjectIds);
+        return subjects.stream()
                 .map(subject -> MyRegisteredSubjectResponseDTO.builder()
                         .id(subject.getId())
                         .subjectName(subject.getSubjectName())

@@ -15,12 +15,11 @@ public class MemberSubject extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 다른 모듈(member)은 FK 연관 없이 ID로만 참조
+    // FK 연관 없이 ID로만 참조
     @Column(name = "member_id", nullable = false)
     private Long memberId;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "subject_id")
-    private Subject subject;
+    @Column(name = "subject_id", nullable = false)
+    private Long subjectId;
 }
 

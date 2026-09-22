@@ -44,11 +44,13 @@ public class CourseEnrollmentService {
             throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
         }
 
-        // 컬렉션 탐색 대신 memberId로 신청 내역 조회
-        List<MemberSubject> myEnrollments = memberSubjectRepository.findAllByMemberId(memberId);
+        // 연관관계 탐색 대신 memberId로 신청 내역 조회 후 과목을 id로 조회
+        List<Long> enrolledSubjectIds = memberSubjectRepository.findAllByMemberId(memberId).stream()
+                .map(MemberSubject::getSubjectId)
+                .toList();
+        List<Subject> enrolledSubjects = subjectRepository.findAllById(enrolledSubjectIds);
 
-        int isSameCode = myEnrollments.stream()
-                .map(MemberSubject::getSubject)
+        int isSameCode = enrolledSubjects.stream()
                 .filter(subj ->
                         subj.getCode().equals(subject.getCode())
                 )
@@ -61,8 +63,7 @@ public class CourseEnrollmentService {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
         }
 
-        boolean conflict = myEnrollments.stream()
-                .map(MemberSubject::getSubject)
+        boolean conflict = enrolledSubjects.stream()
                 .filter(subj ->
                         subj.getSubjectDay() == subject.getSubjectDay()
                 )
@@ -87,7 +88,7 @@ public class CourseEnrollmentService {
         // 저장
         MemberSubject memberSubject = MemberSubject.builder()
                 .memberId(memberId)
-                .subject(subject)
+                .subjectId(subject.getId())
                 .build();
 
         memberSubjectRepository.save(memberSubject);

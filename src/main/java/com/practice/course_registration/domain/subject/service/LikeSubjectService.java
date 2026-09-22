@@ -48,7 +48,7 @@ public class LikeSubjectService {
         // LikeSubject 생성 및 저장
         LikeSubject likeSubject = LikeSubject.builder()
                 .memberId(memberId)
-                .subject(subject)
+                .subjectId(subject.getId())
                 .isRegistration(false)
                 .build();
 
@@ -67,10 +67,9 @@ public class LikeSubjectService {
 
     public Page<LikeSubjectDTO> getLikeSubjectsByUserId(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        // likeSubjectPage : 여러 개의 Subject 객체를 페이지 단위로 가지고 있다.
+        // 연관관계 없이 id 조인으로 찜한 Subject를 과목명순 페이지 조회
         Page<Subject> likeSubjectPage = likeSubjectRepository
-                .findByMemberIdOrderBySubjectAsc(userId, pageable)
-                .map(LikeSubject::getSubject);
+                .findLikedSubjectsByMemberIdOrderByName(userId, pageable);
 
         return likeSubjectPage.map(subject -> {
             // 해당 과목을 사용자가 수강신청했는지 확인
