@@ -6,7 +6,6 @@ import com.practice.course_registration.domain.subject.dto.WaitPositionDTO;
 import com.practice.course_registration.domain.subject.service.SubjectQueryService;
 import com.practice.course_registration.domain.subject.service.SubjectService;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
-import com.practice.course_registration.global.kafka.KafkaProducer;
 import com.practice.course_registration.global.redis.service.WaitQueueService;
 import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import com.practice.course_registration.global.security.utils.SecurityUtils;
