@@ -4,11 +4,8 @@ import com.practice.course_registration.global.common.BaseEntity;
 import com.practice.course_registration.global.enums.SubjectDay;
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -42,15 +39,6 @@ public class Subject extends BaseEntity {
     private LocalTime startTime;
 
     private LocalTime endTime;
-
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<MemberSubject> memberSubjects = new ArrayList<>();
-
-    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
-    @Builder.Default
-    private List<LikeSubject> likeSubjects = new ArrayList<>();
-
 
     public boolean conflictCheck(Subject subject) {
         return this.getStartTime().isBefore(subject.getEndTime())

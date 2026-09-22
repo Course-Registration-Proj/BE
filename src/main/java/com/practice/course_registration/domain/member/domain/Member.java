@@ -1,17 +1,11 @@
 package com.practice.course_registration.domain.member.domain;
 
-import com.practice.course_registration.domain.subject.domain.LikeSubject;
-import com.practice.course_registration.domain.subject.domain.MemberSubject;
 import com.practice.course_registration.global.common.BaseEntity;
 import com.practice.course_registration.global.enums.Role;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.ColumnDefault;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -44,12 +38,6 @@ public class Member extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     private Role role;
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
-    List<MemberSubject> memberSubjects = new ArrayList<>();
-
-    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
-    List<LikeSubject> likeSubjects = new ArrayList<>();
 
     public Member(String memberName, String memberNumber, int grade, String loginId, String password) {
         this.memberName = memberName;

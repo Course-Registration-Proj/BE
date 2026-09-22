@@ -1,7 +1,5 @@
 package com.practice.course_registration.domain.subject.service;
 
-import com.practice.course_registration.domain.member.domain.Member;
-import com.practice.course_registration.domain.member.repository.MemberRepository;
 import com.practice.course_registration.domain.subject.domain.MemberSubject;
 import com.practice.course_registration.domain.subject.domain.Subject;
 import com.practice.course_registration.domain.subject.dto.CourseFilterRequestDTO;
@@ -11,8 +9,6 @@ import com.practice.course_registration.domain.subject.dto.SubjectResponseDTO;
 import com.practice.course_registration.domain.subject.repository.LikeSubjectRepository;
 import com.practice.course_registration.domain.subject.repository.MemberSubjectRepository;
 import com.practice.course_registration.domain.subject.repository.SubjectRepository;
-import com.practice.course_registration.global.apiPayload.code.status.ErrorStatus;
-import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,14 +29,12 @@ import java.util.stream.Collectors;
 public class SubjectQueryService {
 
     private final SubjectRepository subjectRepository;
-    private final MemberRepository memberRepository;
     private final MemberSubjectRepository memberSubjectRepository;
     private final LikeSubjectRepository likeSubjectRepository;
 
     public Page<SubjectResponseDTO> searchAllSubject(Long memberId, CourseFilterRequestDTO filters, Pageable pageable) {
 
         log.info("===========search 시작==============");
-        Member member = findById(memberId);
 
         String code = nullIfBlank(filters.getCode());
         String professorName = nullIfBlank(filters.getProfessorName());
@@ -62,8 +56,8 @@ public class SubjectQueryService {
                 .toList();
         log.info("===========페이지 크기 : " + subjectIds.size());
 
-        Set<Long> registeredIds = memberSubjectRepository.findAllIdByMemberAndSubject(member, subjectIds);
-        Set<Long> likedIds = likeSubjectRepository.findAllByMemberAndSubject(member, subjectIds);
+        Set<Long> registeredIds = memberSubjectRepository.findAllIdByMemberIdAndSubject(memberId, subjectIds);
+        Set<Long> likedIds = likeSubjectRepository.findAllByMemberIdAndSubject(memberId, subjectIds);
 
         return subjects.map(subject -> SubjectResponseDTO.builder()
                 .subjectName(subject.getSubjectName())
@@ -83,11 +77,11 @@ public class SubjectQueryService {
 
     public List<MyRegisteredSubjectResponseDTO> searchMySubject(Long memberId) {
 
-        Member member = findById(memberId);
-
-        List<MemberSubject> memberSubjects = memberSubjectRepository.findAllByMember(member);
-        return memberSubjects.stream()
-                .map(MemberSubject::getSubject)
+        List<Long> subjectIds = memberSubjectRepository.findAllByMemberId(memberId).stream()
+                .map(MemberSubject::getSubjectId)
+                .toList();
+        List<Subject> subjects = subjectRepository.findAllById(subjectIds);
+        return subjects.stream()
                 .map(subject -> MyRegisteredSubjectResponseDTO.builder()
                         .id(subject.getId())
                         .subjectName(subject.getSubjectName())
@@ -102,10 +96,6 @@ public class SubjectQueryService {
                         .build()
                 )
                 .collect(Collectors.toList());
-    }
-
-    private Member findById(Long memberId) {
-        return memberRepository.findById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
     }
 
     private String nullIfBlank(String s) {

@@ -13,6 +13,7 @@ import com.practice.course_registration.global.redis.repository.LuaRepository;
 import com.practice.course_registration.global.redis.service.IdempotencyService;
 import com.practice.course_registration.global.redis.service.WaitQueueService;
 import java.time.Duration;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -112,13 +113,11 @@ public class SubjectService {
                 }
 
                 MemberSubject memberSubject = MemberSubject.builder()
-                        .member(member)
-                        .subject(subject)
+                        .memberId(memberId)
+                        .subjectId(subject.getId())
                         .build()
                 ;
                 memberSubjectRepository.save(memberSubject);
-                member.getMemberSubjects().add(memberSubject);
-                subject.getMemberSubjects().add(memberSubject);
                 member.addScore(subject.getScore());
 
                 luaRepository.deleteHoldKeyOnly(subject.getId(), memberId); // hold 정리
@@ -140,7 +139,7 @@ public class SubjectService {
      * - 신청가능학점을 넘긴경우 -> 위 코드에서 lua 결과로 판단
      * */
     private void validateCheck(Member member, Subject subject) {
-        if (memberSubjectRepository.findByMemberAndSubject(member, subject).isPresent()) {
+        if (memberSubjectRepository.findByMemberIdAndSubjectId(member.getId(), subject.getId()).isPresent()) {
             throw new ErrorHandler(ErrorStatus.ALREADY_APPLY_SUBJECT);
         }
 
@@ -148,16 +147,20 @@ public class SubjectService {
             throw new ErrorHandler(ErrorStatus.OVER_SOCRE_POSSIBLE);
         }
 
-        boolean conflict = member.getMemberSubjects().stream()
-                .map(MemberSubject::getSubject)
+        // 연관관계 탐색 대신 memberId로 신청 내역 조회 후 과목을 id로 조회
+        List<Long> enrolledSubjectIds = memberSubjectRepository.findAllByMemberId(member.getId()).stream()
+                .map(MemberSubject::getSubjectId)
+                .toList();
+        List<Subject> enrolledSubjects = subjectRepository.findAllById(enrolledSubjectIds);
+
+        boolean conflict = enrolledSubjects.stream()
                 .filter(subj ->
                         subj.getSubjectDay() == subject.getSubjectDay()
                 )
                 .anyMatch(subj -> subj.conflictCheck(subject))
                 ;
 
-        int isSameCode = member.getMemberSubjects().stream()
-                .map(MemberSubject::getSubject)
+        int isSameCode = enrolledSubjects.stream()
                 .filter(subj ->
                         subj.getCode().equals(subject.getCode())
                 )
@@ -196,7 +199,7 @@ public class SubjectService {
         // 해당 과목 찾기
         Subject subject = findSubjectById(subjectId);
 
-        MemberSubject memberSubject = memberSubjectRepository.findByMemberAndSubject(member, subject)
+        memberSubjectRepository.findByMemberIdAndSubjectId(memberId, subjectId)
                 .orElseThrow(() -> new ErrorHandler(ErrorStatus.NOT_APPLY_SUBJECT));
 
         // 신청 학점 줄이기
@@ -217,7 +220,7 @@ public class SubjectService {
 
 
     private Member findMemberById(Long memberId) {
-        return memberRepository.findWithSubjectsById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
+        return memberRepository.findById(memberId).orElseThrow(() -> new ErrorHandler(ErrorStatus.MEMBER_NOT_FOUND));
     }
 
     private Subject findByCode(String code) {
