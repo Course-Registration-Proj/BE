@@ -40,3 +40,17 @@ src/main/resources/application.yml
 src/main/resources/application-test.yml
 
 docker-compose.yml
+
+### secrets / env ###
+.env
+!.env.example
+
+### Terraform ###
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+override.tf
+override.tf.json
