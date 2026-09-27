@@ -304,6 +304,20 @@
                         } else {
                             countElem.innerText = "집계 중...";
                         }
+                    } else if (data.status === 'ALLOWED') {
+                        // 내 차례 도착 -> 최종 확정 요청(POST /courses/apply/confirm)
+                        clearInterval(pollingInterval);
+                        fetch('/courses/apply/confirm?code=' + code, { method: 'POST' })
+                            .then(res => res.json())
+                            .then(result => {
+                                alert(result.message);
+                                closeModal();
+                                location.reload();
+                            })
+                            .catch(err => {
+                                console.error("확정 에러:", err);
+                                alert("수강신청 확정 중 오류가 발생했습니다.");
+                            });
                     } else if (data.status === 'SUCCESS') {
                         clearInterval(pollingInterval);
                         alert(data.message);
