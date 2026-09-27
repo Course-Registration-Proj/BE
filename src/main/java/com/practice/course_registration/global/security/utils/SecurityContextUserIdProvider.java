@@ -3,11 +3,13 @@ package com.practice.course_registration.global.security.utils;
 import com.practice.course_registration.global.apiPayload.code.status.ErrorStatus;
 import com.practice.course_registration.global.apiPayload.exception.handler.ErrorHandler;
 import com.practice.course_registration.global.security.domain.CustomUserDetails;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("!loadtest") // 기본(웹) 활성화: 로그인 세션(SecurityContext)에서 userId 사용
 public class SecurityContextUserIdProvider implements UserIdProvider {
     @Override
     public Long getUserId() {
