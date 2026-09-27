@@ -3,7 +3,6 @@ package com.practice.course_registration.global.redis.service;
 import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.cache.CacheProperties.Redis;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +19,6 @@ public class IdempotencyService {
     public boolean rateLimitAllow(Long memberId, int limit, Duration ttl) {
         String key = RedisKeyUtils.rateLimitKey(memberId);
         Long cnt = stringRedisTemplate.opsForValue().increment(key);
-        System.out.println("cnt : " + cnt);
         // 첫 요청인 경우 -> TTL 1로 세팅
         if (cnt != null && cnt == 1L) {
             stringRedisTemplate.expire(key, ttl);
