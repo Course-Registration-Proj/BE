@@ -1,7 +1,6 @@
 package com.practice.course_registration.global.redis.service;
 
 import com.practice.course_registration.global.redis.utils.RedisKeyUtils;
-import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
