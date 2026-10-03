@@ -38,6 +38,7 @@ export const options = {
     http_req_failed: ['rate<0.05'],    // HTTP 레벨 실패(5xx/네트워크) 5% 미만
     http_req_duration: ['p(95)<2000'], // p95 2초 미만 (관찰 기준선)
   },
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
 export default function () {
@@ -90,14 +91,15 @@ export function handleSummary(data) {
 }
 function highlight(data) {
   const m = data.metrics;
-  const cnt = (k) => (m[k] ? m[k].values.count : 0);
+  const cnt = (k) => (m[k] && m[k].values.count != null ? m[k].values.count : 0);
+  const trend = (k, s) => (m[k] && m[k].values[s] != null ? m[k].values[s] : 0);
   const succ = cnt('enroll_success');
   const total = succ + cnt('enroll_rejected');
   const rate = total > 0 ? ((succ / total) * 100).toFixed(1) : '0.0';
-  const p95 = m.http_req_duration ? m.http_req_duration.values['p(95)'] : 0;
-  const p99 = m.http_req_duration ? m.http_req_duration.values['p(99)'] : 0;
-  const rps = m.http_reqs ? m.http_reqs.values.rate : 0;
-  const failed = m.http_req_failed ? (m.http_req_failed.values.rate * 100).toFixed(2) : '0.00';
+  const p95 = trend('http_req_duration', 'p(95)');
+  const p99 = trend('http_req_duration', 'p(99)');
+  const rps = trend('http_reqs', 'rate');
+  const failed = (trend('http_req_failed', 'rate') * 100).toFixed(2);
   return [
     '\n========== 핵심 지표 (처리량 baseline) ==========',
     `신청 성공 / 시도   : ${succ} / ${total}  (성공률 ${rate}%)`,

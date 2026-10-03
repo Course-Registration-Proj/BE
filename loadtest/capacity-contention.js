@@ -32,6 +32,7 @@ export const options = {
       maxDuration: '2m',
     },
   },
+  summaryTrendStats: ['avg', 'min', 'med', 'max', 'p(90)', 'p(95)', 'p(99)'],
 };
 
 export default function () {
@@ -86,10 +87,11 @@ export function handleSummary(data) {
 }
 function highlight(data) {
   const m = data.metrics;
-  const cnt = (k) => (m[k] ? m[k].values.count : 0);
+  const cnt = (k) => (m[k] && m[k].values.count != null ? m[k].values.count : 0);
+  const trend = (k, s) => (m[k] && m[k].values[s] != null ? m[k].values[s] : 0);
   const hot = parseInt(__ENV.HOT_SUBJECTS || '1');
-  const p95 = m.http_req_duration ? m.http_req_duration.values['p(95)'] : 0;
-  const failed = m.http_req_failed ? (m.http_req_failed.values.rate * 100).toFixed(2) : '0.00';
+  const p95 = trend('http_req_duration', 'p(95)');
+  const failed = (trend('http_req_failed', 'rate') * 100).toFixed(2);
   return [
     '\n========== 정합성 검증 (경합) ==========',
     `신청 성공(정원 내) : ${cnt('enroll_success')}   (기대: 30 x ${hot} = ${30 * hot})`,
