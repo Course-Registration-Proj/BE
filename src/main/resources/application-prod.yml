@@ -43,5 +43,15 @@ server:
 app:
   seed:
     enabled: true
-    member-count: 100
+    member-count: 2500
     member-password: test1234
+
+# 부하테스트용 지표 노출 (thread pool / connection pool / cpu)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  metrics:
+    tags:
+      application: course-registration

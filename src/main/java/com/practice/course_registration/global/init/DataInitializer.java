@@ -50,7 +50,7 @@ public class DataInitializer implements CommandLineRunner {
     private void seedSubjects() {
         SubjectDay[] days = SubjectDay.values();
         List<Subject> subjects = new ArrayList<>();
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 30; i++) {
             subjects.add(Subject.builder()
                     .subjectName("테스트과목" + i)
                     .professorName("교수" + i)
