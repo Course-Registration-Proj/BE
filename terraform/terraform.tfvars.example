@@ -7,5 +7,8 @@ db_username         = "course"
 mysql_root_password = "change-me-root-password"
 db_password         = "change-me-app-password"
 
+# Spring 프로파일 (평소 prod / 부하테스트 시 prod,loadtest 로 변경하면 헤더 기반 userId 활성화)
+# spring_profiles_active = "prod,loadtest"
+
 # SSH 허용 IP를 직접 지정하려면 주석 해제 (비우면 apply 시 현재 공인 IP 자동 감지)
 # ssh_ingress_cidr  = "1.2.3.4/32"
