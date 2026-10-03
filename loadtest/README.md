@@ -44,3 +44,27 @@ done
 - `enroll_success` == `30 * HOT_SUBJECTS` (정원만큼만 성공)
 - 각 과목 `registeredNum <= limitedNum(30)` → **정원 초과 0**
 - 같은 유저 중복 성공 0
+
+## 실패 원인 추적 (중요)
+`http_req_failed`는 5xx/네트워크만 집계(비즈니스 400 제외)하고,
+요약에 **5xx가 어느 단계에서 났는지**(apply/try/confirm)가 표시된다:
+```
+실제 실패율(5xx)   : 11.12 %
+└ 5xx 발생 단계    : apply=0 / try=0 / confirm=25156
+```
+→ "어디서" 터졌는지 확인한 뒤, **서버 로그로 "왜"를 확정**한다 (ground truth):
+```bash
+ssh -i ~/.ssh/id_ed25519 ubuntu@<EC2-IP> \
+  "sudo docker logs springboot-app 2>&1 | grep -iE 'exception|timeout|HikariPool|Connection is not available' | tail -40"
+```
+예: `HikariPool-1 - Connection is not available, request timed out` →
+"confirm 단계 5xx = 커넥션풀 고갈로 인한 타임아웃(500)" 으로 원인 확정.
+
+## 시계열(무릎 지점) 분석
+램프 중 어느 VU에서 깨지는지 보려면 시계열 출력 + 라이브 모니터링:
+```bash
+# k6 시계열 저장
+k6 run --out csv=loadtest/results/ts.csv -e BASE_URL=http://<IP> loadtest/throughput-baseline.js
+# (동시에 다른 터미널) 커넥션풀 pending 실시간
+while true; do clear; date +%T; curl -s http://<IP>/actuator/prometheus | grep -E "^hikaricp_connections_(active|pending|max)"; sleep 1; done
+```
