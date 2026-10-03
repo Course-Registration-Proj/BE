@@ -42,6 +42,12 @@ variable "docker_username" {
   type        = string
 }
 
+variable "spring_profiles_active" {
+  description = "Spring 프로파일 (평소 prod / 부하테스트 시 prod,loadtest)"
+  type        = string
+  default     = "prod"
+}
+
 variable "db_name" {
   description = "MySQL 데이터베이스명"
   type        = string

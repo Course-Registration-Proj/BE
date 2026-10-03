@@ -10,6 +10,7 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
 import { Counter } from 'k6/metrics';
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.4/index.js';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost';
 const HOT_SUBJECTS = parseInt(__ENV.HOT_SUBJECTS || '1'); // 경쟁 대상 과목 수 (1 또는 2)
@@ -69,3 +70,29 @@ function formHeaders(userId) {
   return { headers: { userId: String(userId), 'Content-Type': 'application/x-www-form-urlencoded' } };
 }
 function safeJson(res) { try { return res.json(); } catch (e) { return null; } }
+
+// 터미널엔 전체 요약 + 정합성 지표 강조, 파일엔 JSON 저장(비교용)
+export function handleSummary(data) {
+  const ts = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  return {
+    stdout: textSummary(data, { indent: ' ', enableColors: true }) + highlight(data),
+    [`loadtest/results/capacity-contention-${ts}.json`]: JSON.stringify(data, null, 2),
+  };
+}
+function highlight(data) {
+  const m = data.metrics;
+  const cnt = (k) => (m[k] ? m[k].values.count : 0);
+  const hot = parseInt(__ENV.HOT_SUBJECTS || '1');
+  const p95 = m.http_req_duration ? m.http_req_duration.values['p(95)'] : 0;
+  const failed = m.http_req_failed ? (m.http_req_failed.values.rate * 100).toFixed(2) : '0.00';
+  return [
+    '\n========== 정합성 검증 (경합) ==========',
+    `신청 성공(정원 내) : ${cnt('enroll_success')}   (기대: 30 x ${hot} = ${30 * hot})`,
+    `정원 초과 거절     : ${cnt('capacity_full')}`,
+    `기타 거절          : ${cnt('other_reject')}`,
+    `응답시간 p95       : ${p95.toFixed(0)} ms`,
+    `HTTP 실패율        : ${failed} %`,
+    '>>> 각 과목 registeredNum <= 30 인지 서버에서 추가 확인',
+    '=======================================\n',
+  ].join('\n');
+}

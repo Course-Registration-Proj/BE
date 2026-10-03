@@ -9,6 +9,7 @@ locals {
   # EC2에 전달할 .env 내용
   env_content = <<-EOT
     DOCKER_USERNAME=${var.docker_username}
+    SPRING_PROFILES_ACTIVE=${var.spring_profiles_active}
     MYSQL_ROOT_PASSWORD=${var.mysql_root_password}
     DB_NAME=${var.db_name}
     DB_USERNAME=${var.db_username}
