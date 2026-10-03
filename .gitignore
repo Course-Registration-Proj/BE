@@ -54,3 +54,5 @@ docker-compose.yml
 crash.log
 override.tf
 override.tf.json
+### k6 결과 덤프 ###
+loadtest/results/*.json

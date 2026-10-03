@@ -8,6 +8,7 @@
 import http from 'k6/http';
 import { sleep } from 'k6';
 import { Counter } from 'k6/metrics';
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.4/index.js';
 
 const BASE_URL = __ENV.BASE_URL || 'http://localhost';
 const SUBJECT_COUNT = parseInt(__ENV.SUBJECT_COUNT || '30'); // 시드된 과목 수
@@ -75,3 +76,31 @@ function formHeaders(userId) {
 }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function safeJson(res) { try { return res.json(); } catch (e) { return null; } }
+
+// 터미널엔 전체 요약 + 핵심 지표 강조, 파일엔 JSON 저장(비교용)
+export function handleSummary(data) {
+  const ts = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  return {
+    stdout: textSummary(data, { indent: ' ', enableColors: true }) + highlight(data),
+    [`loadtest/results/throughput-baseline-${ts}.json`]: JSON.stringify(data, null, 2),
+  };
+}
+function highlight(data) {
+  const m = data.metrics;
+  const cnt = (k) => (m[k] ? m[k].values.count : 0);
+  const succ = cnt('enroll_success');
+  const total = succ + cnt('enroll_rejected');
+  const rate = total > 0 ? ((succ / total) * 100).toFixed(1) : '0.0';
+  const p95 = m.http_req_duration ? m.http_req_duration.values['p(95)'] : 0;
+  const p99 = m.http_req_duration ? m.http_req_duration.values['p(99)'] : 0;
+  const rps = m.http_reqs ? m.http_reqs.values.rate : 0;
+  const failed = m.http_req_failed ? (m.http_req_failed.values.rate * 100).toFixed(2) : '0.00';
+  return [
+    '\n========== 핵심 지표 (처리량 baseline) ==========',
+    `신청 성공 / 시도   : ${succ} / ${total}  (성공률 ${rate}%)`,
+    `처리량(http_reqs)  : ${rps.toFixed(1)} req/s`,
+    `응답시간 p95 / p99 : ${p95.toFixed(0)} / ${p99.toFixed(0)} ms`,
+    `HTTP 실패율        : ${failed} %`,
+    '================================================\n',
+  ].join('\n');
+}
