@@ -16,6 +16,9 @@ const SUBJECT_COUNT = parseInt(__ENV.SUBJECT_COUNT || '30'); // 시드된 과목
 const enrollSuccess = new Counter('enroll_success');   // 최종 신청 성공
 const enrollRejected = new Counter('enroll_rejected'); // 비즈니스 거절(정원/중복/학점초과 등)
 
+// 비즈니스 거절(400)은 정상 응답으로 취급 → http_req_failed는 실제 실패(5xx/네트워크)만 집계
+http.setResponseCallback(http.expectedStatuses(200, 400));
+
 export const options = {
   scenarios: {
     baseline: {

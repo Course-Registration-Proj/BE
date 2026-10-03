@@ -20,6 +20,9 @@ const enrollSuccess = new Counter('enroll_success'); // 정원 안에 들어 성
 const capacityFull = new Counter('capacity_full');   // 정원 초과로 거절
 const otherReject = new Counter('other_reject');     // 그 외 거절
 
+// 비즈니스 거절(400)은 정상 응답으로 취급 → http_req_failed는 실제 실패(5xx/네트워크)만 집계
+http.setResponseCallback(http.expectedStatuses(200, 400));
+
 export const options = {
   scenarios: {
     contention: {
@@ -51,9 +54,11 @@ export default function () {
   if (!allowed) { otherReject.add(1); return; }
 
   // 3) 최종 확정
-  const c = safeJson(http.post(`${BASE_URL}/courses/apply/confirm?code=${code}`, null, formHeaders(userId)));
+  const confRes = http.post(`${BASE_URL}/courses/apply/confirm?code=${code}`, null, formHeaders(userId));
+  const c = safeJson(confRes);
   if (c && c.status === 'SUCCESS') enrollSuccess.add(1);
-  else classify(c);
+  else if (confRes.status === 400) capacityFull.add(1); // 정원 참(confirm 400) → 정원 초과 거절
+  else otherReject.add(1);
 }
 
 // 검증 포인트(실행 후 확인):
